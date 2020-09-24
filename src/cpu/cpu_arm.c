@@ -979,6 +979,10 @@ virCPUarmCompare(virCPUDefPtr host,
     virCPUCompareResult ret = VIR_CPU_COMPARE_ERROR;
     g_autofree char *message = NULL;
 
+    /* Only support host to host CPU compare for ARM */
+    if (cpu->type != VIR_CPU_TYPE_HOST)
+        return VIR_CPU_COMPARE_IDENTICAL;
+
     if (!host || !host->model) {
         if (failMessages) {
             virReportError(VIR_ERR_CPU_INCOMPATIBLE, "%s",
