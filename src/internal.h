@@ -217,6 +217,15 @@
     } while (0)
 
 /**
+ * VIR_IS_POW2:
+ *
+ * Returns true if given number is a power of two
+ */
+#define VIR_IS_POW2(x) \
+    ((x) && !((x) & ((x) - 1)))
+
+
+/**
  * virCheckFlags:
  * @supported: an OR'ed set of supported flags
  * @retval: return value in case unsupported flags were passed
