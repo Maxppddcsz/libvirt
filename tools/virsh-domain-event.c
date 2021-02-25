@@ -397,6 +397,10 @@ virshEventIOErrorPrint(virConnectPtr conn G_GNUC_UNUSED,
         virshEventPrintf(opaque, _("event 'io-error' for domain '%1$s': %2$s (%3$s) report\n"),
                          virDomainGetName(dom), srcPath, devAlias);
         break;
+    case VIR_DOMAIN_EVENT_IO_ERROR_RETRY:
+        virshEventPrintf(opaque, _("event 'io-error' for domain '%1$s': %2$s (%3$s) report\n"),
+                         virDomainGetName(dom), srcPath, devAlias);
+        break;
     case VIR_DOMAIN_EVENT_IO_ERROR_LAST:
     default:
         virshEventPrintf(opaque, _("event 'io-error' for domain '%1$s': %2$s (%3$s) unknown\n"),
@@ -457,6 +461,10 @@ virshEventIOErrorReasonPrint(virConnectPtr conn G_GNUC_UNUSED,
     case VIR_DOMAIN_EVENT_IO_ERROR_REPORT:
         virshEventPrintf(opaque, _("event 'io-error' for domain '%1$s': %2$s (%3$s) report due to %4$s\n"),
                          virDomainGetName(dom), srcPath, devAlias, reason);
+        break;
+    case VIR_DOMAIN_EVENT_IO_ERROR_RETRY:
+        virshEventPrintf(opaque, _("event 'io-error' for domain '%1$s': %2$s (%3$s) report\n"),
+                         virDomainGetName(dom), srcPath, devAlias);
         break;
     case VIR_DOMAIN_EVENT_IO_ERROR_LAST:
     default:
