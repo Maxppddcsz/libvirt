@@ -385,6 +385,7 @@ VIR_ENUM_IMPL(virDomainDiskErrorPolicy,
               "report",
               "ignore",
               "enospace",
+              "retry",
 );
 
 VIR_ENUM_IMPL(virDomainDiskIo,
@@ -7773,6 +7774,8 @@ static int
 virDomainDiskDefDriverParseXML(virDomainDiskDef *def,
                                xmlNodePtr cur)
 {
+    g_autofree char *tmp = NULL;
+
     def->driverName = virXMLPropString(cur, "name");
 
     if (virXMLPropEnum(cur, "cache", virDomainDiskCacheTypeFromString,
@@ -7793,6 +7796,29 @@ virDomainDiskDefDriverParseXML(virDomainDiskDef *def,
         virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
                        _("Invalid disk read error policy: '%1$s'"),
                        virDomainDiskErrorPolicyTypeToString(def->rerror_policy));
+        return -1;
+    }
+
+    def->retry_interval = -1;
+    if ((tmp = virXMLPropString(cur, "retry_interval")) &&
+        ((def->error_policy != VIR_DOMAIN_DISK_ERROR_POLICY_RETRY &&
+          def->rerror_policy != VIR_DOMAIN_DISK_ERROR_POLICY_RETRY) ||
+         (virStrToLong_ll(tmp, NULL, 10, &def->retry_interval) < 0) ||
+         (def->retry_interval < 0))) {
+        virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
+                       _("unknown disk retry interval '%s'"), tmp);
+        return -1;
+    }
+    VIR_FREE(tmp);
+
+    def->retry_timeout = -1;
+    if ((tmp = virXMLPropString(cur, "retry_timeout")) &&
+        ((def->error_policy != VIR_DOMAIN_DISK_ERROR_POLICY_RETRY &&
+          def->rerror_policy != VIR_DOMAIN_DISK_ERROR_POLICY_RETRY) ||
+         (virStrToLong_ll(tmp, NULL, 10, &def->retry_timeout) < 0) ||
+         (def->retry_timeout < 0))) {
+        virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
+                       _("unknown disk retry interval '%s'"), tmp);
         return -1;
     }
 

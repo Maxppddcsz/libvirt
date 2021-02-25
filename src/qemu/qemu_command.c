@@ -1753,6 +1753,8 @@ qemuBuildDiskDeviceProps(const virDomainDef *def,
     const char *biosCHSTrans = NULL;
     const char *wpolicy = NULL;
     const char *rpolicy = NULL;
+    g_autoptr(virJSONValue) retry_interval = NULL;
+    g_autoptr(virJSONValue) retry_timeout = NULL;
 
     switch (disk->bus) {
     case VIR_DOMAIN_DISK_BUS_IDE:
@@ -1912,6 +1914,15 @@ qemuBuildDiskDeviceProps(const virDomainDef *def,
     }
 
     qemuBuildDiskGetErrorPolicy(disk, &wpolicy, &rpolicy);
+    if ((disk->error_policy == VIR_DOMAIN_DISK_ERROR_POLICY_RETRY ||
+         disk->rerror_policy == VIR_DOMAIN_DISK_ERROR_POLICY_RETRY) &&
+         disk->retry_interval >= 0)
+        retry_interval = virJSONValueNewNumberUlong(disk->retry_interval);
+    if ((disk->error_policy == VIR_DOMAIN_DISK_ERROR_POLICY_RETRY ||
+         disk->rerror_policy == VIR_DOMAIN_DISK_ERROR_POLICY_RETRY) &&
+         disk->retry_timeout >= 0)
+        retry_timeout = virJSONValueNewNumberUlong(disk->retry_timeout);
+
 
     if (virJSONValueObjectAdd(&props,
                               "S:device_id", scsiVPDDeviceId,
@@ -1936,6 +1947,8 @@ qemuBuildDiskDeviceProps(const virDomainDef *def,
                               "S:serial", serial,
                               "S:werror", wpolicy,
                               "S:rerror", rpolicy,
+                              "A:retry_interval", &retry_interval,
+                              "A:retry_timeout", &retry_timeout,
                               NULL) < 0)
         return NULL;
 
