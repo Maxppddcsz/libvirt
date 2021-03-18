@@ -515,6 +515,8 @@ typedef enum {
 
 VIR_ENUM_DECL(virDomainSnapshotLocation);
 
+#define VIR_DOMAIN_DISK_DEFAULT_RETRY_INTERVAL    1000
+#define VIR_DOMAIN_DISK_DEFAULT_RETRY_TIMEOUT     0
 
 /* Stores the virtual disk configuration */
 struct _virDomainDiskDef {
