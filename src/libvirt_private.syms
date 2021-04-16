@@ -3482,6 +3482,7 @@ virXMLParseHelper;
 virXMLPickShellSafeComment;
 virXMLPropString;
 virXMLPropStringLimit;
+virXMLPropTristateBool;
 virXMLSaveFile;
 virXMLValidateAgainstSchema;
 virXMLValidatorFree;
