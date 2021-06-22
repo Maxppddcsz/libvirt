@@ -20596,8 +20596,6 @@ static int
 virDomainFeaturesKVMDefParse(virDomainDef *def,
                              xmlNodePtr node)
 {
-    g_autofree char *tmp = NULL;
-
     def->features[VIR_DOMAIN_FEATURE_KVM] = VIR_TRISTATE_SWITCH_ON;
 
     if (def->features[VIR_DOMAIN_FEATURE_KVM] == VIR_TRISTATE_SWITCH_ON) {
@@ -20614,33 +20612,11 @@ virDomainFeaturesKVMDefParse(virDomainDef *def,
                 return -1;
             }
 
-            switch ((virDomainKVM) feature) {
-                case VIR_DOMAIN_KVM_HIDDEN:
-                case VIR_DOMAIN_KVM_DEDICATED:
-                    if (!(tmp = virXMLPropString(node, "state"))) {
-                        virReportError(VIR_ERR_XML_ERROR,
-                                       _("missing 'state' attribute for "
-                                         "KVM feature '%s'"),
-                                       node->name);
-                        return -1;
-                    }
+            if (virXMLPropTristateSwitch(node, "state", VIR_XML_PROP_REQUIRED,
+                                         &value) < 0)
+                return -1;
 
-                    if ((value = virTristateSwitchTypeFromString(tmp)) < 0) {
-                        virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
-                                       _("invalid value of state argument "
-                                         "for KVM feature '%s'"),
-                                       node->name);
-                        return -1;
-                    }
-
-                    VIR_FREE(tmp);
-                    def->kvm_features[feature] = value;
-                    break;
-
-                /* coverity[dead_error_begin] */
-                case VIR_DOMAIN_KVM_LAST:
-                    break;
-            }
+            def->kvm_features[feature] = value;
 
             node = xmlNextElementSibling(node);
         }
