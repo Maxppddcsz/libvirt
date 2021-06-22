@@ -20592,6 +20592,65 @@ virDomainMemorytuneDefParse(virDomainDefPtr def,
     return ret;
 }
 
+static int
+virDomainFeaturesKVMDefParse(virDomainDef *def,
+                             xmlXPathContext *ctxt)
+{
+    g_autofree char *tmp = NULL;
+    g_autofree xmlNodePtr *nodes = NULL;
+    size_t i;
+    int n;
+
+    def->features[VIR_DOMAIN_FEATURE_KVM] = VIR_TRISTATE_SWITCH_ON;
+
+    if (def->features[VIR_DOMAIN_FEATURE_KVM] == VIR_TRISTATE_SWITCH_ON) {
+        int feature;
+        virTristateSwitch value;
+        if ((n = virXPathNodeSet("./features/kvm/*", ctxt, &nodes)) < 0)
+            return -1;
+
+        for (i = 0; i < n; i++) {
+            feature = virDomainKVMTypeFromString((const char *)nodes[i]->name);
+            if (feature < 0) {
+                virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
+                               _("unsupported KVM feature: %s"),
+                               nodes[i]->name);
+                return -1;
+            }
+
+            switch ((virDomainKVM) feature) {
+                case VIR_DOMAIN_KVM_HIDDEN:
+                case VIR_DOMAIN_KVM_DEDICATED:
+                    if (!(tmp = virXMLPropString(nodes[i], "state"))) {
+                        virReportError(VIR_ERR_XML_ERROR,
+                                       _("missing 'state' attribute for "
+                                         "KVM feature '%s'"),
+                                       nodes[i]->name);
+                        return -1;
+                    }
+
+                    if ((value = virTristateSwitchTypeFromString(tmp)) < 0) {
+                        virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
+                                       _("invalid value of state argument "
+                                         "for KVM feature '%s'"),
+                                       nodes[i]->name);
+                        return -1;
+                    }
+
+                    VIR_FREE(tmp);
+                    def->kvm_features[feature] = value;
+                    break;
+
+                /* coverity[dead_error_begin] */
+                case VIR_DOMAIN_KVM_LAST:
+                    break;
+            }
+        }
+        VIR_FREE(nodes);
+    }
+
+    return 0;
+}
 
 static virDomainDefPtr
 virDomainDefParseXML(xmlDocPtr xml,
@@ -21109,11 +21168,14 @@ virDomainDefParseXML(xmlDocPtr xml,
         case VIR_DOMAIN_FEATURE_VIRIDIAN:
         case VIR_DOMAIN_FEATURE_PRIVNET:
         case VIR_DOMAIN_FEATURE_HYPERV:
-        case VIR_DOMAIN_FEATURE_KVM:
         case VIR_DOMAIN_FEATURE_MSRS:
             def->features[val] = VIR_TRISTATE_SWITCH_ON;
             break;
 
+        case VIR_DOMAIN_FEATURE_KVM:
+            if (virDomainFeaturesKVMDefParse(def, ctxt) < 0)
+                goto error;
+            break;
         case VIR_DOMAIN_FEATURE_CAPABILITIES:
             if ((tmp = virXMLPropString(nodes[i], "policy"))) {
                 if ((def->features[val] = virDomainCapabilitiesPolicyTypeFromString(tmp)) == -1) {
@@ -21371,52 +21433,6 @@ virDomainDefParseXML(xmlDocPtr xml,
 
             VIR_FREE(tmp);
             def->hyperv_stimer_direct = value;
-        }
-        VIR_FREE(nodes);
-    }
-
-    if (def->features[VIR_DOMAIN_FEATURE_KVM] == VIR_TRISTATE_SWITCH_ON) {
-        int feature;
-        int value;
-        if ((n = virXPathNodeSet("./features/kvm/*", ctxt, &nodes)) < 0)
-            goto error;
-
-        for (i = 0; i < n; i++) {
-            feature = virDomainKVMTypeFromString((const char *)nodes[i]->name);
-            if (feature < 0) {
-                virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
-                               _("unsupported KVM feature: %s"),
-                               nodes[i]->name);
-                goto error;
-            }
-
-            switch ((virDomainKVM) feature) {
-                case VIR_DOMAIN_KVM_HIDDEN:
-                case VIR_DOMAIN_KVM_DEDICATED:
-                    if (!(tmp = virXMLPropString(nodes[i], "state"))) {
-                        virReportError(VIR_ERR_XML_ERROR,
-                                       _("missing 'state' attribute for "
-                                         "KVM feature '%s'"),
-                                       nodes[i]->name);
-                        goto error;
-                    }
-
-                    if ((value = virTristateSwitchTypeFromString(tmp)) < 0) {
-                        virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
-                                       _("invalid value of state argument "
-                                         "for KVM feature '%s'"),
-                                       nodes[i]->name);
-                        goto error;
-                    }
-
-                    VIR_FREE(tmp);
-                    def->kvm_features[feature] = value;
-                    break;
-
-                /* coverity[dead_error_begin] */
-                case VIR_DOMAIN_KVM_LAST:
-                    break;
-            }
         }
         VIR_FREE(nodes);
     }
