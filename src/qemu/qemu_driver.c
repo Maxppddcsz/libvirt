@@ -19954,11 +19954,14 @@ qemuDomainHotpatchManage(virDomainPtr domain,
     if (!(vm = qemuDomainObjFromDomain(domain)))
         goto cleanup;
 
-    if (VirDomainObjBeginAsyncJob(driver, vm, QEMU_ASYNC_JOB_HOTPATCH,
+    if (virDomainObjBeginAsyncJob(vm, VIR_ASYNC_JOB_HOTPATCH,
                                    VIR_DOMAIN_JOB_OPERATION_HOTPATCH, 0) < 0)
         goto cleanup;
 
-    qemuDomainObjSetAsyncJobMask(vm, QEMU_JOB_DEFAULT_MASK);
+    if (virDomainObjCheckActive(vm) < 0)
+        goto endjob;
+
+    qemuDomainObjSetAsyncJobMask(vm, VIR_JOB_DEFAULT_MASK);
 
     switch (action) {
     case VIR_DOMAIN_HOTPATCH_APPLY:
@@ -19987,7 +19990,7 @@ qemuDomainHotpatchManage(virDomainPtr domain,
         ret[len - 1] = '\0';
 
  endjob:
-    qemuDomainObjEndAsyncJob(driver, vm);
+    virDomainObjEndAsyncJob(vm);
 
  cleanup:
     virDomainObjEndAPI(&vm);
