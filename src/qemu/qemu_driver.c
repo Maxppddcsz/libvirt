@@ -105,6 +105,7 @@
 #include "virdomaincheckpointobjlist.h"
 #include "virutil.h"
 #include "backup_conf.h"
+#include "qemu_hotpatch.h"
 
 #define VIR_FROM_THIS VIR_FROM_QEMU
 
@@ -19934,6 +19935,52 @@ qemuDomainFDAssociate(virDomainPtr domain,
     return ret;
 }
 
+static char *
+qemuDomainHotpatchManage(virDomainPtr domain,
+                         int action,
+                         const char *patch,
+                         const char *id,
+                         unsigned int flags)
+{
+    virDomainObjPtr vm;
+    char *ret = NULL;
+    size_t len;
+
+    virCheckFlags(0, NULL);
+
+    if (!(vm = qemuDomainObjFromDomain(domain)))
+        goto cleanup;
+
+    switch (action) {
+    case VIR_DOMAIN_HOTPATCH_APPLY:
+        ret = qemuDomainHotpatchApply(vm, patch);
+        break;
+
+    case VIR_DOMAIN_HOTPATCH_UNAPPLY:
+        ret = qemuDomainHotpatchUnapply(vm, id);
+        break;
+
+    case VIR_DOMAIN_HOTPATCH_QUERY:
+        ret = qemuDomainHotpatchQuery(vm);
+        break;
+
+    default:
+        virReportError(VIR_ERR_OPERATION_INVALID, "%s",
+                       _("Unknow hotpatch action"));
+    }
+
+    if (!ret)
+        goto endjob;
+
+    /* Wipeout redundant empty line */
+    len = strlen(ret);
+    if (len > 0)
+        ret[len - 1] = '\0';
+
+ cleanup:
+    virDomainObjEndAPI(&vm);
+    return ret;
+}
 
 static virHypervisorDriver qemuHypervisorDriver = {
     .name = QEMU_DRIVER_NAME,
@@ -20178,6 +20225,7 @@ static virHypervisorDriver qemuHypervisorDriver = {
     .domainAgentSetResponseTimeout = qemuDomainAgentSetResponseTimeout, /* 5.10.0 */
     .domainBackupBegin = qemuDomainBackupBegin, /* 6.0.0 */
     .domainBackupGetXMLDesc = qemuDomainBackupGetXMLDesc, /* 6.0.0 */
+    .domainHotpatchManage = qemuDomainHotpatchManage, /* 6.2.0 */
     .domainAuthorizedSSHKeysGet = qemuDomainAuthorizedSSHKeysGet, /* 6.10.0 */
     .domainAuthorizedSSHKeysSet = qemuDomainAuthorizedSSHKeysSet, /* 6.10.0 */
     .domainGetMessages = qemuDomainGetMessages, /* 7.1.0 */

@@ -13805,7 +13805,7 @@ virDomainBackupGetXMLDesc(virDomainPtr domain,
  *
  * Returns success messages in case of success, NULL otherwise.
  *
- * Since: 6.10.0
+ * Since: 6.2.0
  */
 char *
 virDomainHotpatchManage(virDomainPtr domain,
