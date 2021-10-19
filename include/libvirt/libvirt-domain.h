@@ -4201,6 +4201,7 @@ typedef enum {
     VIR_DOMAIN_JOB_OPERATION_DUMP = 8, /* (Since: 3.3.0) */
     VIR_DOMAIN_JOB_OPERATION_BACKUP = 9, /* (Since: 6.0.0) */
     VIR_DOMAIN_JOB_OPERATION_SNAPSHOT_DELETE = 10, /* (Since: 9.0.0) */
+    VIR_DOMAIN_JOB_OPERATION_HOTPATCH = 11, /* (Since: 6.2.0) */
 
 # ifdef VIR_ENUM_SENTINELS
     VIR_DOMAIN_JOB_OPERATION_LAST /* (Since: 3.3.0) */

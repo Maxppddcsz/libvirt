@@ -12251,6 +12251,8 @@ qemuDomainAbortJobFlags(virDomainPtr dom,
         qemuBackupJobCancelBlockjobs(vm, priv->backup, true, VIR_ASYNC_JOB_NONE);
         ret = 0;
         break;
+    case VIR_ASYNC_JOB_HOTPATCH:
+        break;
 
     case VIR_ASYNC_JOB_LAST:
     default:
@@ -19942,7 +19944,8 @@ qemuDomainHotpatchManage(virDomainPtr domain,
                          const char *id,
                          unsigned int flags)
 {
-    virDomainObjPtr vm;
+    virDomainObj *vm;
+    virQEMUDriver *driver = domain->conn->privateData;
     char *ret = NULL;
     size_t len;
 
@@ -19950,6 +19953,12 @@ qemuDomainHotpatchManage(virDomainPtr domain,
 
     if (!(vm = qemuDomainObjFromDomain(domain)))
         goto cleanup;
+
+    if (VirDomainObjBeginAsyncJob(driver, vm, QEMU_ASYNC_JOB_HOTPATCH,
+                                   VIR_DOMAIN_JOB_OPERATION_HOTPATCH, 0) < 0)
+        goto cleanup;
+
+    qemuDomainObjSetAsyncJobMask(vm, QEMU_JOB_DEFAULT_MASK);
 
     switch (action) {
     case VIR_DOMAIN_HOTPATCH_APPLY:
@@ -19976,6 +19985,9 @@ qemuDomainHotpatchManage(virDomainPtr domain,
     len = strlen(ret);
     if (len > 0)
         ret[len - 1] = '\0';
+
+ endjob:
+    qemuDomainObjEndAsyncJob(driver, vm);
 
  cleanup:
     virDomainObjEndAPI(&vm);

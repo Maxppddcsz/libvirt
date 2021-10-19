@@ -3758,6 +3758,7 @@ qemuProcessRecoverJob(virQEMUDriver *driver,
                                       JOB_MASK(VIR_JOB_MODIFY)));
         break;
 
+    case VIR_ASYNC_JOB_HOTPATCH:
     case VIR_ASYNC_JOB_NONE:
     case VIR_ASYNC_JOB_LAST:
         break;

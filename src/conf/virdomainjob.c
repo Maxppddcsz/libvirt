@@ -51,6 +51,7 @@ VIR_ENUM_IMPL(virDomainAsyncJob,
               "snapshot",
               "start",
               "backup",
+              "hotpatch",
 );
 
 virDomainJobData *

@@ -6152,6 +6152,7 @@ VIR_ENUM_IMPL(virshDomainJobOperation,
               N_("Dump"),
               N_("Backup"),
               N_("Snapshot delete"),
+              N_("Hotpatch"),
 );
 
 static const char *

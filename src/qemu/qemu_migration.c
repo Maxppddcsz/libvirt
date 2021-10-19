@@ -1846,6 +1846,8 @@ qemuMigrationJobName(virDomainObj *vm)
         return _("start");
     case VIR_ASYNC_JOB_BACKUP:
         return _("backup");
+    case VIR_ASYNC_JOB_HOTPATCH:
+        return _("hotpatch job");
     case VIR_ASYNC_JOB_NONE:
     case VIR_ASYNC_JOB_LAST:
     default:
