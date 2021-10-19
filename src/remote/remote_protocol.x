@@ -3956,6 +3956,17 @@ struct remote_domain_event_memory_device_size_change_msg {
     unsigned hyper size;
 };
 
+struct remote_domain_hotpatch_manage_args {
+    remote_nonnull_domain dom;
+    int action;
+    remote_string patch;
+    remote_string id;
+    unsigned int flags;
+};
+
+struct remote_domain_hotpatch_manage_ret {
+    remote_string info;
+};
 
 struct remote_domain_fd_associate_args {
     remote_nonnull_domain dom;
@@ -7021,5 +7032,11 @@ enum remote_procedure {
      * @generate: both
      * @acl: none
      */
-    REMOTE_PROC_NETWORK_EVENT_CALLBACK_METADATA_CHANGE = 446
+    REMOTE_PROC_NETWORK_EVENT_CALLBACK_METADATA_CHANGE = 446,
+
+    /**
+     * @generate: both
+     * @acl: domain:read
+     */
+    REMOTE_PROC_DOMAIN_HOTPATCH_MANAGE = 800
 };

@@ -6417,6 +6417,29 @@ int virDomainAuthorizedSSHKeysGet(virDomainPtr domain,
                                   unsigned int flags);
 
 /**
+ * virDomainHotpatchAction:
+ *
+ * Since: 6.2.0
+ */
+typedef enum {
+    VIR_DOMAIN_HOTPATCH_NONE = 0, /* No action */
+    VIR_DOMAIN_HOTPATCH_APPLY,    /* Apply hotpatch */
+    VIR_DOMAIN_HOTPATCH_UNAPPLY,  /* Unapply hotpatch */
+    VIR_DOMAIN_HOTPATCH_QUERY,    /* Query hotpatch */
+
+# ifdef VIR_ENUM_SENTINELS
+    VIR_DOMAIN_HOTPATCH_LAST
+# endif
+} virDomainHotpatchAction;
+
+char *
+virDomainHotpatchManage(virDomainPtr domain,
+                        int action,
+                        const char *patch,
+                        const char *id,
+                        unsigned int flags);
+
+/**
  * virDomainAuthorizedSSHKeysSetFlags:
  *
  * Since: 6.10.0

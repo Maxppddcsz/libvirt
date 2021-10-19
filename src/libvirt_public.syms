@@ -873,6 +873,11 @@ LIBVIRT_6.0.0 {
         virDomainBackupGetXMLDesc;
 } LIBVIRT_5.10.0;
 
+LIBVIRT_6.2.0 {
+    global:
+        virDomainHotpatchManage;
+} LIBVIRT_6.0.0;
+
 LIBVIRT_6.10.0 {
     global:
         virDomainAuthorizedSSHKeysGet;
