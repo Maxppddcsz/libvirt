@@ -13557,6 +13557,78 @@ cmdGuestInfo(vshControl *ctl, const vshCmd *cmd)
 }
 
 /*
+ * "hotpatch" command
+ */
+static const vshCmdInfo info_hotpatch[] = {
+    {.name = "help",
+     .data = N_("Manage hotpatch of a live domain")
+    },
+    {.name = "desc",
+     .data = N_("Manage hotpatch of a live domain")
+    },
+    {.name = NULL}
+};
+
+static const vshCmdOptDef opts_hotpatch[] = {
+    VIRSH_COMMON_OPT_DOMAIN_FULL(0),
+    {.name = "action",
+     .type = VSH_OT_DATA,
+     .flags = VSH_OFLAG_REQ,
+     .help = N_("hotpatch action, choose from <apply>, <unapply> and <query>")
+    },
+    {.name = "patch",
+     .type = VSH_OT_STRING,
+     .help = N_("the absolute path of the hotpatch file, mandatory when action=apply")
+    },
+    {.name = "id",
+     .type = VSH_OT_STRING,
+     .help = N_("the unique id of the target patch, mandatory when action=unapply")
+    },
+    {.name = NULL}
+};
+
+VIR_ENUM_DECL(virDomainHotpatchAction);
+VIR_ENUM_IMPL(virDomainHotpatchAction,
+              VIR_DOMAIN_HOTPATCH_LAST,
+              "none",
+              "apply",
+              "unapply",
+              "query");
+
+static bool
+cmdHotpatch(vshControl *ctl,
+            const vshCmd *cmd)
+{
+    g_autoptr(virshDomain) dom = NULL;
+    const char *patch = NULL;
+    const char *id = NULL;
+    const char *actionstr = NULL;
+    int action = -1;
+    g_autofree char *ret = NULL;
+
+    if (!(dom = virshCommandOptDomain(ctl, cmd, NULL)))
+        return false;
+
+    if (vshCommandOptStringReq(ctl, cmd, "action", &actionstr) < 0)
+        return false;
+
+    if (actionstr)
+        action = virDomainHotpatchActionTypeFromString(actionstr);
+
+    if (vshCommandOptStringReq(ctl, cmd, "patch", &patch) < 0)
+        return false;
+
+    if (vshCommandOptStringReq(ctl, cmd, "id", &id) < 0)
+        return false;
+
+    if (!(ret = virDomainHotpatchManage(dom, action, patch, id, 0)))
+        return false;
+
+    vshPrint(ctl, _("%s"), ret);
+    return true;
+}
+
+/*
  * "get-user-sshkeys" command
  */
 static const vshCmdInfo info_get_user_sshkeys[] = {
@@ -14454,6 +14526,12 @@ const vshCmdDef domManagementCmds[] = {
      .handler = cmdDomFdAssociate,
      .opts = opts_dom_fd_associate,
      .info = info_dom_fd_associate,
+     .flags = 0
+    },
+    {.name = "hotpatch",
+     .handler = cmdHotpatch,
+     .opts = opts_hotpatch,
+     .info = info_hotpatch,
      .flags = 0
     },
     {.name = NULL}
