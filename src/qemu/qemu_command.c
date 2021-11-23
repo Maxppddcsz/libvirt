@@ -6920,6 +6920,9 @@ qemuBuildCpuCommandLine(virCommandPtr cmd,
                     virBufferAddLit(&buf, ",kvm-hint-dedicated=on");
                 break;
 
+            case VIR_DOMAIN_KVM_DIRTY_RING:
+                break;
+
             /* coverity[dead_error_begin] */
             case VIR_DOMAIN_KVM_LAST:
                 break;

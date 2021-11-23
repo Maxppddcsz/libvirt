@@ -2055,6 +2055,7 @@
   &lt;kvm&gt;
     &lt;hidden state='on'/&gt;
     &lt;hint-dedicated state='on'/&gt;
+    &lt;dirty-ring state='on' size='4096'/&gt;
   &lt;/kvm&gt;
   &lt;pvspinlock state='on'/&gt;
   &lt;gic version='2'/&gt;
@@ -2234,6 +2235,12 @@
           <td>Allows a guest to enable optimizations when running on dedicated vCPUs</td>
           <td>on, off</td>
           <td><span class="since">5.7.0 (QEMU 2.12.0)</span></td>
+        </tr>
+        <tr>
+          <td>dirty-ring</td>
+          <td>Enable dirty ring feature</td>
+          <td>on, off; size - must be power of 2, range [1024,65536]</td>
+          <td><span class="since">8.0.0 (QEMU 6.1)</span></td>
         </tr>
       </table>
       </dd>

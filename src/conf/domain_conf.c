@@ -205,6 +205,7 @@ VIR_ENUM_IMPL(virDomainKVM,
               VIR_DOMAIN_KVM_LAST,
               "hidden",
               "hint-dedicated",
+              "dirty-ring",
 );
 
 VIR_ENUM_IMPL(virDomainMsrsUnknown,
@@ -20620,6 +20621,22 @@ virDomainFeaturesKVMDefParse(virDomainDef *def,
 
         kvm->features[feature] = value;
 
+        /* dirty ring feature should parse size property */
+        if (feature == VIR_DOMAIN_KVM_DIRTY_RING &&
+            value == VIR_TRISTATE_SWITCH_ON) {
+            if (virXMLPropUInt(node, "size", 0, VIR_XML_PROP_REQUIRED,
+                               &kvm->dirty_ring_size) < 0) {
+                return -1;
+            }
+            if (!VIR_IS_POW2(kvm->dirty_ring_size) ||
+                kvm->dirty_ring_size < 1024 ||
+                kvm->dirty_ring_size > 65536) {
+                virReportError(VIR_ERR_XML_ERROR, "%s",
+                               _("dirty ring must be power of 2 and ranges [1024, 65536]"));
+                return -1;
+            }
+        }
+
         node = xmlNextElementSibling(node);
     }
 
@@ -23590,6 +23607,7 @@ virDomainDefFeaturesCheckABIStability(virDomainDefPtr src,
             switch ((virDomainKVM) i) {
             case VIR_DOMAIN_KVM_HIDDEN:
             case VIR_DOMAIN_KVM_DEDICATED:
+            case VIR_DOMAIN_KVM_DIRTY_RING:
                 if (src->kvm_features->features[i] != dst->kvm_features->features[i]) {
                     virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
                                    _("State of KVM feature '%s' differs: "
@@ -23606,6 +23624,16 @@ virDomainDefFeaturesCheckABIStability(virDomainDefPtr src,
             case VIR_DOMAIN_KVM_LAST:
                 break;
             }
+        }
+
+        if (src->kvm_features->dirty_ring_size != dst->kvm_features->dirty_ring_size) {
+            virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
+                           _("dirty ring size of KVM feature '%s' differs: "
+                             "source: '%d', destination: '%d'"),
+                           virDomainKVMTypeToString(i),
+                           src->kvm_features->dirty_ring_size,
+                           dst->kvm_features->dirty_ring_size);
+            return false;
         }
     }
 
@@ -29212,6 +29240,20 @@ virDomainDefFormatFeatures(virBufferPtr buf,
                                           virDomainKVMTypeToString(j),
                                           virTristateSwitchTypeToString(
                                               def->kvm_features->features[j]));
+                    break;
+
+                case VIR_DOMAIN_KVM_DIRTY_RING:
+                    if (def->kvm_features->features[j] != VIR_TRISTATE_SWITCH_ABSENT) {
+                        virBufferAsprintf(&childBuf, "<%s state='%s'",
+                                          virDomainKVMTypeToString(j),
+                                          virTristateSwitchTypeToString(def->kvm_features->features[j]));
+                        if (def->kvm_features->dirty_ring_size > 0) {
+                            virBufferAsprintf(&childBuf, " size='%d'/>\n",
+                                              def->kvm_features->dirty_ring_size);
+                        } else {
+                            virBufferAddLit(&childBuf, "/>\n");
+                        }
+                    }
                     break;
 
                 /* coverity[dead_error_begin] */
