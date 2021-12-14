@@ -2297,6 +2297,11 @@ struct _virDomainResctrlDef {
     size_t nmonitors;
 };
 
+typedef struct _virDomainFeatureKVM virDomainFeatureKVM;
+struct _virDomainFeatureKVM {
+    int features[VIR_DOMAIN_KVM_LAST];
+};
+
 
 struct _virDomainVcpuDef {
     bool online;
@@ -2479,7 +2484,7 @@ struct _virDomainDef {
     int features[VIR_DOMAIN_FEATURE_LAST];
     int caps_features[VIR_DOMAIN_PROCES_CAPS_FEATURE_LAST];
     int hyperv_features[VIR_DOMAIN_HYPERV_LAST];
-    int kvm_features[VIR_DOMAIN_KVM_LAST];
+    virDomainFeatureKVM *kvm_features;
     int msrs_features[VIR_DOMAIN_MSRS_LAST];
     unsigned int hyperv_spinlocks;
     int hyperv_stimer_direct;
