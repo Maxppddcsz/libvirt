@@ -13574,7 +13574,7 @@ static const vshCmdOptDef opts_hotpatch[] = {
     {.name = "action",
      .type = VSH_OT_DATA,
      .flags = VSH_OFLAG_REQ,
-     .help = N_("hotpatch action, choose from <apply>, <unapply> and <query>")
+     .help = N_("hotpatch action, choose from <apply>, <unapply>, <query> and <autoload>")
     },
     {.name = "patch",
      .type = VSH_OT_STRING,
@@ -13593,7 +13593,8 @@ VIR_ENUM_IMPL(virDomainHotpatchAction,
               "none",
               "apply",
               "unapply",
-              "query");
+              "query",
+              "autoload");
 
 static bool
 cmdHotpatch(vshControl *ctl,

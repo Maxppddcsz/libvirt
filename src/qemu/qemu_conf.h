@@ -231,6 +231,8 @@ struct _virQEMUDriverConfig {
     char *deprecationBehavior;
 
     virQEMUSchedCore schedCore;
+
+    char *hotpatchPath;
 };
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(virQEMUDriverConfig, virObjectUnref);
