@@ -147,6 +147,7 @@ struct _qemuDomainObjPrivate {
                                                it was changed for the current
                                                migration job. */
     char *migrationPids;
+    char *migrationThreadPinList;
     char *migrationMultiFdPids;
     unsigned int migrationMultiFdCount;
     virChrdevs *devs;

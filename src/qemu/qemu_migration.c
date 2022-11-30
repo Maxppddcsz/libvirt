@@ -4838,6 +4838,8 @@ qemuMigrationSrcRun(virQEMUDriver *driver,
                                   priv->migMaxBandwidth * 1024 * 1024) < 0)
         goto error;
 
+    qemuMigrationMigrationParamsToVM(migParams, vm);
+
     if (qemuMigrationParamsApply(vm, VIR_ASYNC_JOB_MIGRATION_OUT,
                                  migParams, flags) < 0)
         goto error;

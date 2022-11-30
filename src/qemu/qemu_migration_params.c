@@ -121,6 +121,7 @@ VIR_ENUM_IMPL(qemuMigrationParam,
               "multifd-compression",
               "multifd-zlib-level",
               "multifd-zstd-level",
+              "migrationpin",
 );
 
 typedef struct _qemuMigrationParamsAlwaysOnItem qemuMigrationParamsAlwaysOnItem;
@@ -243,6 +244,10 @@ static const qemuMigrationParamsTPMapItem qemuMigrationParamsTPMap[] = {
     {.typedParam = VIR_MIGRATE_PARAM_TLS_DESTINATION,
      .param = QEMU_MIGRATION_PARAM_TLS_HOSTNAME,
      .party = QEMU_MIGRATION_SOURCE},
+
+    {.typedParam = VIR_MIGRATE_PARAM_MIGRATIONPIN,
+     .param = QEMU_MIGRATION_PARAM_MIGRATIONPIN,
+     .party = QEMU_MIGRATION_SOURCE},
 };
 
 static const qemuMigrationParamInfoItem qemuMigrationParamInfo[] = {
@@ -295,6 +300,9 @@ static const qemuMigrationParamInfoItem qemuMigrationParamInfo[] = {
     [QEMU_MIGRATION_PARAM_MULTIFD_ZSTD_LEVEL] = {
         .type = QEMU_MIGRATION_PARAM_TYPE_INT,
     },
+    [QEMU_MIGRATION_PARAM_MIGRATIONPIN] = {
+        .type = QEMU_MIGRATION_PARAM_TYPE_STRING,
+    }
 };
 G_STATIC_ASSERT(G_N_ELEMENTS(qemuMigrationParamInfo) == QEMU_MIGRATION_PARAM_LAST);
 
@@ -652,6 +660,16 @@ qemuMigrationParamsSetCompression(virTypedParameterPtr params,
 
 
 void
+qemuMigrationMigrationParamsToVM(const qemuMigrationParams *migParams, const virDomainObj *vm)
+{
+    if (migParams && migParams->params[QEMU_MIGRATION_PARAM_MIGRATIONPIN].set) {
+        qemuDomainObjPrivate *priv = vm->privateData;
+        priv->migrationThreadPinList = g_strdup(migParams->params[QEMU_MIGRATION_PARAM_MIGRATIONPIN].value.s);
+    }
+}
+
+
+void
 qemuMigrationParamsSetBlockDirtyBitmapMapping(qemuMigrationParams *migParams,
                                               virJSONValue **params)
 {
@@ -869,6 +887,10 @@ qemuMigrationParamsToJSON(qemuMigrationParams *migParams,
 
         if (!pv->set)
             continue;
+
+        if (i == QEMU_MIGRATION_PARAM_MIGRATIONPIN) {
+            continue;
+        }
 
         if (postcopyResume && !qemuMigrationParamInfo[i].applyOnPostcopyResume)
             continue;

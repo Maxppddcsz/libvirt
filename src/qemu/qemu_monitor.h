@@ -328,10 +328,9 @@ typedef void (*qemuMonitorDomainRdmaGidStatusChangedCallback)(qemuMonitor *mon,
 typedef void (*qemuMonitorDomainGuestCrashloadedCallback)(qemuMonitor *mon,
                                                           virDomainObj *vm);
 
-typedef int (*qemuMonitorDomainMigrationPidCallback)(qemuMonitorPtr mon,
-                                                     virDomainObjPtr vm,
-                                                     int mcpid,
-                                                     void *opaque);
+typedef void (*qemuMonitorDomainMigrationPidCallback)(qemuMonitor *mon,
+                                                      virDomainObj *vm,
+                                                      int mcpid);
 
 typedef enum {
     QEMU_MONITOR_MEMORY_FAILURE_RECIPIENT_HYPERVISOR,
@@ -511,7 +510,7 @@ void qemuMonitorEmitMigrationStatus(qemuMonitor *mon,
 void qemuMonitorEmitMigrationPass(qemuMonitor *mon,
                                   int pass);
 
-int qemuMonitorEmitMigrationPid(qemuMonitorPtr mon, int mpid);
+void qemuMonitorEmitMigrationPid(qemuMonitor *mon, int mpid);
 
 void qemuMonitorEmitAcpiOstInfo(qemuMonitor *mon,
                                 const char *alias,

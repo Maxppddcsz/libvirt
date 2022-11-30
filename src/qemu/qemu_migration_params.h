@@ -62,6 +62,7 @@ typedef enum {
     QEMU_MIGRATION_PARAM_MULTIFD_COMPRESSION,
     QEMU_MIGRATION_PARAM_MULTIFD_ZLIB_LEVEL,
     QEMU_MIGRATION_PARAM_MULTIFD_ZSTD_LEVEL,
+    QEMU_MIGRATION_PARAM_MIGRATIONPIN,
 
     QEMU_MIGRATION_PARAM_LAST
 } qemuMigrationParam;
@@ -76,6 +77,9 @@ typedef enum {
 
 virBitmap *
 qemuMigrationParamsGetAlwaysOnCaps(qemuMigrationParty party);
+
+void
+qemuMigrationMigrationParamsToVM(const qemuMigrationParams *migParams, const virDomainObj *vm);
 
 qemuMigrationParams *
 qemuMigrationParamsFromFlags(virTypedParameterPtr params,

@@ -1880,6 +1880,7 @@ qemuDomainObjPrivateFree(void *data)
     g_free(priv->lockState);
     g_free(priv->origname);
     VIR_FREE(priv->migrationPids);
+    VIR_FREE(priv->migrationThreadPinList);
     virBitmapFree(priv->pcpumap);
 
     VIR_FREE(priv->migrationMultiFdPids);

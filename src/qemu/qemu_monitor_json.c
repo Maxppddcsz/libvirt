@@ -84,7 +84,7 @@ static void qemuMonitorJSONHandleRdmaGidStatusChanged(qemuMonitor *mon, virJSONV
 static void qemuMonitorJSONHandleMemoryFailure(qemuMonitor *mon, virJSONValue *data);
 static void qemuMonitorJSONHandleMemoryDeviceSizeChange(qemuMonitor *mon, virJSONValue *data);
 static void qemuMonitorJSONHandleDeviceUnplugErr(qemuMonitor *mon, virJSONValue *data);
-static void qemuMonitorJSONHandleMigrationPid(qemuMonitorPtr mon, virJSONValuePtr data);
+static void qemuMonitorJSONHandleMigrationPid(qemuMonitor *mon, virJSONValue *data);
 static void qemuMonitorJSONHandleNetdevStreamDisconnected(qemuMonitor *mon, virJSONValue *data);
 
 typedef struct {
@@ -133,8 +133,8 @@ static qemuEventHandler eventHandlers[] = {
     /* We use bsearch, so keep this list sorted.  */
 };
 
-static void qemuMonitorJSONHandleMigrationPid(qemuMonitorPtr mon,
-                                              virJSONValuePtr data)
+static void qemuMonitorJSONHandleMigrationPid(qemuMonitor *mon,
+                                              virJSONValue *data)
 {
     int mpid;
 
