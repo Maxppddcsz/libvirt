@@ -1439,6 +1439,58 @@ qemuProcessHandleSpiceMigrated(qemuMonitor *mon G_GNUC_UNUSED,
 
 
 static void
+qemuProcessHandleMigrationPinStatus(virDomainObj *vm, int status)
+{
+    qemuDomainObjPrivate *priv = vm->privateData;
+    if (vm->job->asyncJob != VIR_ASYNC_JOB_MIGRATION_OUT)
+        return;
+
+    switch (status) {
+    case QEMU_MONITOR_MIGRATION_STATUS_INACTIVE:
+    case QEMU_MONITOR_MIGRATION_STATUS_SETUP:
+    case QEMU_MONITOR_MIGRATION_STATUS_ACTIVE:
+    case QEMU_MONITOR_MIGRATION_STATUS_PRE_SWITCHOVER:
+    case QEMU_MONITOR_MIGRATION_STATUS_DEVICE:
+    case QEMU_MONITOR_MIGRATION_STATUS_POSTCOPY:
+    case QEMU_MONITOR_MIGRATION_STATUS_CANCELLING:
+    case QEMU_MONITOR_MIGRATION_STATUS_COMPLETED:
+    case QEMU_MONITOR_MIGRATION_STATUS_WAIT_UNPLUG:
+        break;
+    case QEMU_MONITOR_MIGRATION_STATUS_ERROR:
+        /*
+         * migration thread is still running,
+         * so we can't delete migration Cgroup.
+         */
+        VIR_FREE(priv->migrationPids);
+        VIR_FREE(priv->migrationMultiFdPids);
+        VIR_FREE(priv->migrationThreadPinList);
+        priv->migrationMultiFdCount = 0;
+        virBitmapFree(priv->pcpumap);
+        priv->pcpumap = NULL;
+        break;
+    case QEMU_MONITOR_MIGRATION_STATUS_CANCELLED:
+        VIR_FREE(priv->migrationPids);
+        VIR_FREE(priv->migrationMultiFdPids);
+        VIR_FREE(priv->migrationThreadPinList);
+        priv->migrationMultiFdCount = 0;
+        virBitmapFree(priv->pcpumap);
+        priv->pcpumap = NULL;
+        if (virCgroupDelThread(priv->cgroup,
+                               VIR_CGROUP_THREAD_MIGRATION_THREAD, 0) < 0)
+            VIR_WARN("Failed to delete migration thread Cgroup!");
+        VIR_INFO("success to free pcpumap and migrationPids");
+        break;
+    default:
+        VIR_WARN("got unknown migration status'%s'",
+                qemuMonitorMigrationStatusTypeToString(status));
+        break;
+    }
+
+    return;
+}
+
+
+static void
 qemuProcessHandleMigrationStatus(qemuMonitor *mon G_GNUC_UNUSED,
                                  virDomainObj *vm,
                                  int status)
@@ -1552,6 +1604,8 @@ qemuProcessHandleMigrationStatus(qemuMonitor *mon G_GNUC_UNUSED,
     default:
         break;
     }
+
+    qemuProcessHandleMigrationPinStatus(vm, status);
 
  cleanup:
     virObjectUnlock(vm);
@@ -1820,6 +1874,7 @@ static qemuMonitorCallbacks monitorCallbacks = {
     .domainMemoryDeviceSizeChange = qemuProcessHandleMemoryDeviceSizeChange,
     .domainDeviceUnplugError = qemuProcessHandleDeviceUnplugErr,
     .domainMigrationPid = qemuProcessHandleMigrationPid,
+    .domainMigrationMultiFdPids = qemuProcessHandleMigrationMultiFdPids,
     .domainNetdevStreamDisconnected = qemuProcessHandleNetdevStreamDisconnected,
 };
 
@@ -2840,6 +2895,65 @@ qemuProcessHandleMigrationPid(qemuMonitor *mon ATTRIBUTE_UNUSED,
 
     VIR_FREE(priv->migrationPids);
     priv->migrationPids = mpidStr;
+
+    pcpumap = qemuProcessGetPcpumap(priv);
+
+    if (!pcpumap)
+        goto cleanup;
+
+    qemuProcessSetMigthreadAffinity(priv, pcpumap, mpid);
+
+ cleanup:
+    /*
+     * If the value of pcpumap is setted by priv->migrationThreadPinList,
+     * we need to free pcpumap.
+     */
+    if (pcpumap != priv->pcpumap)
+        virBitmapFree(pcpumap);
+    virDomainMigrationIDDefFree(migration);
+    virObjectUnlock(vm);
+}
+
+
+void
+qemuProcessHandleMigrationMultiFdPids(qemuMonitor *mon ATTRIBUTE_UNUSED,
+                                      virDomainObj *vm,
+                                      int mpid)
+{
+    qemuDomainObjPrivate *priv;
+    char *mpidOldStr = NULL;
+    char *mpidStr = NULL;
+    virDomainMigrationIDDefPtr migration = NULL;
+    virBitmap *pcpumap = NULL;
+    virObjectLock(vm);
+
+    VIR_INFO("Migrating domain %p %s, migration-multifd pid %d",
+              vm, vm->def->name, mpid);
+
+    priv = vm->privateData;
+    if (vm->job->asyncJob == VIR_ASYNC_JOB_NONE) {
+        VIR_DEBUG("got MIGRATION_MULTIFD_PID event without a migration job");
+        goto cleanup;
+    }
+
+    migration = g_malloc0(sizeof(*migration));
+    migration->thread_id = mpid;
+
+    if (qemuProcessSetupMigration(vm, migration) < 0) {
+        VIR_ERROR(_("fail to setup migration multiFd cgroup"));
+        goto cleanup;
+    }
+
+    mpidOldStr = priv->migrationMultiFdPids;
+    if (!mpidOldStr) {
+        mpidStr = g_strdup_printf("%d", mpid);
+    } else {
+        mpidStr = g_strdup_printf("%s/%d", mpidOldStr, mpid);
+    }
+
+    VIR_FREE(priv->migrationMultiFdPids);
+    priv->migrationMultiFdPids = mpidStr;
+    priv->migrationMultiFdCount++;
 
     pcpumap = qemuProcessGetPcpumap(priv);
 

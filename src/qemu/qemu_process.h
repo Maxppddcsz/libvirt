@@ -262,6 +262,10 @@ void qemuProcessHandleMigrationPid(qemuMonitor *mon ATTRIBUTE_UNUSED,
                                    virDomainObj *vm,
                                    int mpid);
 
+void qemuProcessHandleMigrationMultiFdPids(qemuMonitor *mon ATTRIBUTE_UNUSED,
+                                           virDomainObj *vm,
+                                           int mpid);
+
 void qemuProcessCleanupMigrationJob(virQEMUDriver *driver,
                                     virDomainObj *vm);
 
