@@ -328,6 +328,11 @@ typedef void (*qemuMonitorDomainRdmaGidStatusChangedCallback)(qemuMonitor *mon,
 typedef void (*qemuMonitorDomainGuestCrashloadedCallback)(qemuMonitor *mon,
                                                           virDomainObj *vm);
 
+typedef int (*qemuMonitorDomainMigrationPidCallback)(qemuMonitorPtr mon,
+                                                     virDomainObjPtr vm,
+                                                     int mcpid,
+                                                     void *opaque);
+
 typedef enum {
     QEMU_MONITOR_MEMORY_FAILURE_RECIPIENT_HYPERVISOR,
     QEMU_MONITOR_MEMORY_FAILURE_RECIPIENT_GUEST,
@@ -400,6 +405,7 @@ struct _qemuMonitorCallbacks {
     qemuMonitorDomainMemoryFailureCallback domainMemoryFailure;
     qemuMonitorDomainMemoryDeviceSizeChange domainMemoryDeviceSizeChange;
     qemuMonitorDomainDeviceUnplugErrCallback domainDeviceUnplugError;
+    qemuMonitorDomainMigrationPidCallback domainMigrationPid;
     qemuMonitorDomainNetdevStreamDisconnectedCallback domainNetdevStreamDisconnected;
 };
 
@@ -504,6 +510,8 @@ void qemuMonitorEmitMigrationStatus(qemuMonitor *mon,
                                     int status);
 void qemuMonitorEmitMigrationPass(qemuMonitor *mon,
                                   int pass);
+
+int qemuMonitorEmitMigrationPid(qemuMonitorPtr mon, int mpid);
 
 void qemuMonitorEmitAcpiOstInfo(qemuMonitor *mon,
                                 const char *alias,

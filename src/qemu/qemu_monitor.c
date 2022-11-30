@@ -1401,6 +1401,18 @@ qemuMonitorEmitPRManagerStatusChanged(qemuMonitor *mon,
 }
 
 
+int
+qemuMonitorEmitMigrationPid(qemuMonitorPtr mon,
+                            int mpid)
+{
+    int ret = -1;
+    VIR_DEBUG("mon=%p, pass=%d", mon, mpid);
+    QEMU_MONITOR_CALLBACK(mon, ret, domainMigrationPid, mon->vm, mpid);
+
+    return ret;
+}
+
+
 void
 qemuMonitorEmitRdmaGidStatusChanged(qemuMonitor *mon,
                                     const char *netdev,
