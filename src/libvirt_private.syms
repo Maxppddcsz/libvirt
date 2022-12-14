@@ -523,6 +523,7 @@ virDomainMemoryModelTypeToString;
 virDomainMemoryRemove;
 virDomainMemorySourceTypeFromString;
 virDomainMemorySourceTypeToString;
+virDomainMigrationIDDefFree;
 virDomainMouseModeTypeFromString;
 virDomainMouseModeTypeToString;
 virDomainNetAllocateActualDevice;

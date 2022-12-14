@@ -31075,6 +31075,14 @@ virDomainDefHasSpiceGraphics(const virDomainDef *def)
     return false;
 }
 
+void
+virDomainMigrationIDDefFree(virDomainMigrationIDDefPtr def)
+{
+    if (!def)
+        return;
+    virBitmapFree(def->cpumask);
+    VIR_FREE(def);
+}
 
 ssize_t
 virDomainWatchdogDefFind(const virDomainDef *def,

@@ -3362,6 +3362,7 @@ qemuMigrationDstPrepareFresh(virQEMUDriver *driver,
 
     priv = vm->privateData;
     priv->origname = g_strdup(origname);
+    VIR_FREE(priv->migrationPids);
 
     if (taint_hook) {
         /* Domain XML has been altered by a hook script. */

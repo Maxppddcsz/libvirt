@@ -146,7 +146,9 @@ struct _qemuDomainObjPrivate {
     unsigned long long preMigrationMemlock; /* Original RLIMIT_MEMLOCK in case
                                                it was changed for the current
                                                migration job. */
-
+    char *migrationPids;
+    char *migrationMultiFdPids;
+    unsigned int migrationMultiFdCount;
     virChrdevs *devs;
 
     qemuDomainCleanupCallback *cleanupCallbacks;
@@ -166,6 +168,7 @@ struct _qemuDomainObjPrivate {
     /* Bitmaps below hold data from the auto NUMA feature */
     virBitmap *autoNodeset;
     virBitmap *autoCpuset;
+    virBitmap *pcpumap;
 
     bool signalIOError; /* true if the domain condition should be signalled on
                            I/O error */
