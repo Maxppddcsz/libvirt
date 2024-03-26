@@ -850,6 +850,10 @@ nodeDeviceCreateXMLMdev(virConnectPtr conn,
 {
     g_autofree char *uuid = NULL;
 
+    virReportError(VIR_ERR_CONFIG_UNSUPPORTED, "%s",
+		   _("Unsupported device type"));
+    return NULL;
+
     if (!def->parent) {
         virReportError(VIR_ERR_XML_ERROR, "%s",
                        _("cannot create a mediated device without a parent"));
