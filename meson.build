@@ -1630,6 +1630,7 @@ if not get_option('driver_qemu').disabled()
   if use_qemu
     conf.set('WITH_QEMU', 1)
 
+    conf.set('WITH_CLIENT_QEMU', 0)
     qemu_moddir = get_option('qemu_moddir')
     if qemu_moddir == ''
       qemu_moddir = libdir / 'qemu'

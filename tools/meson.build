@@ -301,7 +301,7 @@ if conf.has('WITH_SANLOCK')
   )
 endif
 
-if conf.has('WITH_QEMU')
+if conf.has('WITH_CLIENT_QEMU')
   install_data('virt-qemu-sev-validate',
                install_dir: bindir)
 endif
@@ -327,7 +327,7 @@ if conf.has('WITH_LIBVIRTD')
   endif
 endif
 
-if conf.has('WITH_QEMU')
+if conf.has('WITH_CLIENT_QEMU')
     install_data('virt-qemu-qmp-proxy',
                  install_dir: bindir)
 endif
