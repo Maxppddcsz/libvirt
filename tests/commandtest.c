@@ -211,6 +211,7 @@ static int test4(const void *unused G_GNUC_UNUSED)
     g_autofree char *pidfile = virPidFileBuildPath(abs_builddir, "commandhelper");
     pid_t pid;
     int ret = -1;
+    int count = 0;
 
     if (!pidfile)
         goto cleanup;
@@ -227,8 +228,13 @@ static int test4(const void *unused G_GNUC_UNUSED)
         printf("cannot read pidfile\n");
         goto cleanup;
     }
-    while (kill(pid, 0) != -1)
-        g_usleep(100*1000);
+    while (kill(pid, 0) != -1) {
+	if (count++ >= 600) {
+            printf("check time exceeds 60s, it may be in container env, skip this testcase!!!\n");
+	    break;
+	}
+        g_usleep(100*1000); /* 100 */
+    }
 
     ret = checkoutput("test4");
 
