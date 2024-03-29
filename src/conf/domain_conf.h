@@ -27,6 +27,7 @@
 #include <libxml/xpath.h>
 
 #include "internal.h"
+#include "viralloc.h"
 #include "virconftypes.h"
 #include "capabilities.h"
 #include "cpu_conf.h"
@@ -4498,3 +4499,14 @@ virDomainObjGetMessages(virDomainObj *vm,
 
 bool
 virDomainDefHasSpiceGraphics(const virDomainDef *def);
+
+typedef struct _virDomainMigrationIDDef virDomainMigrationIDDef;
+typedef virDomainMigrationIDDef *virDomainMigrationIDDefPtr;
+struct _virDomainMigrationIDDef {
+    bool autofill;
+    int thread_id;
+    virBitmap *cpumask;
+    virDomainThreadSchedParam sched;
+};
+
+void virDomainMigrationIDDefFree(virDomainMigrationIDDefPtr def);

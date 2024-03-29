@@ -25,6 +25,7 @@
 #include "qemu_domain.h"
 #include "qemu_saveimage.h"
 #include "vireventthread.h"
+#include "domain_conf.h"
 
 int qemuProcessPrepareMonitorChr(virDomainChrSourceDef *monConfig,
                                  const char *domainDir);
@@ -249,6 +250,21 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(qemuProcessQMP, qemuProcessQMPFree);
 int qemuProcessQMPStart(qemuProcessQMP *proc);
 
 bool qemuProcessRebootAllowed(const virDomainDef *def);
+
+int qemuProcessSetupMigration(virDomainObj *vm,
+                              virDomainMigrationIDDefPtr migration);
+
+unsigned char * virParseCPUList(int *cpumaplen,
+                                const char *cpulist,
+                                int maxcpu);
+
+void qemuProcessHandleMigrationPid(qemuMonitor *mon ATTRIBUTE_UNUSED,
+                                   virDomainObj *vm,
+                                   int mpid);
+
+void qemuProcessHandleMigrationMultiFdPids(qemuMonitor *mon ATTRIBUTE_UNUSED,
+                                           virDomainObj *vm,
+                                           int mpid);
 
 void qemuProcessCleanupMigrationJob(virQEMUDriver *driver,
                                     virDomainObj *vm);

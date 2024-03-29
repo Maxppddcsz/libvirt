@@ -84,6 +84,8 @@ static void qemuMonitorJSONHandleRdmaGidStatusChanged(qemuMonitor *mon, virJSONV
 static void qemuMonitorJSONHandleMemoryFailure(qemuMonitor *mon, virJSONValue *data);
 static void qemuMonitorJSONHandleMemoryDeviceSizeChange(qemuMonitor *mon, virJSONValue *data);
 static void qemuMonitorJSONHandleDeviceUnplugErr(qemuMonitor *mon, virJSONValue *data);
+static void qemuMonitorJSONHandleMigrationPid(qemuMonitor *mon, virJSONValue *data);
+static void qemuMonitorJSONHandleMigrationMultiFdPids(qemuMonitor *mon, virJSONValue *data);
 static void qemuMonitorJSONHandleNetdevStreamDisconnected(qemuMonitor *mon, virJSONValue *data);
 
 typedef struct {
@@ -106,7 +108,9 @@ static qemuEventHandler eventHandlers[] = {
     { "MEMORY_DEVICE_SIZE_CHANGE", qemuMonitorJSONHandleMemoryDeviceSizeChange, },
     { "MEMORY_FAILURE", qemuMonitorJSONHandleMemoryFailure, },
     { "MIGRATION", qemuMonitorJSONHandleMigrationStatus, },
+    { "MIGRATION_MULTIFD_PID", qemuMonitorJSONHandleMigrationMultiFdPids, },
     { "MIGRATION_PASS", qemuMonitorJSONHandleMigrationPass, },
+    { "MIGRATION_PID", qemuMonitorJSONHandleMigrationPid, },
     { "NETDEV_STREAM_DISCONNECTED", qemuMonitorJSONHandleNetdevStreamDisconnected, },
     { "NIC_RX_FILTER_CHANGED", qemuMonitorJSONHandleNicRxFilterChanged, },
     { "PR_MANAGER_STATUS_CHANGED", qemuMonitorJSONHandlePRManagerStatusChanged, },
@@ -130,6 +134,32 @@ static qemuEventHandler eventHandlers[] = {
     { "WATCHDOG", qemuMonitorJSONHandleWatchdog, },
     /* We use bsearch, so keep this list sorted.  */
 };
+
+static void qemuMonitorJSONHandleMigrationPid(qemuMonitor *mon,
+                                              virJSONValue *data)
+{
+    int mpid;
+
+    if (virJSONValueObjectGetNumberInt(data, "pid", &mpid) < 0) {
+        VIR_WARN("missing migration pid in migration-pid event");
+        return;
+    }
+
+    qemuMonitorEmitMigrationPid(mon, mpid);
+}
+
+static void qemuMonitorJSONHandleMigrationMultiFdPids(qemuMonitor *mon,
+                                                      virJSONValue *data)
+{
+    int mpid;
+
+    if (virJSONValueObjectGetNumberInt(data, "pid", &mpid) < 0) {
+        VIR_WARN("missing multifd pid in migration-multifd-pid event");
+        return;
+    }
+
+    qemuMonitorEmitMigrationMultiFdPids(mon, mpid);
+}
 
 static int
 qemuMonitorEventCompare(const void *key, const void *elt)

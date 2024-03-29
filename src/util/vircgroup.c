@@ -1123,6 +1123,9 @@ virCgroupNewThread(virCgroup *domain,
     case VIR_CGROUP_THREAD_IOTHREAD:
         name = g_strdup_printf("iothread%d", id);
         break;
+    case VIR_CGROUP_THREAD_MIGRATION_THREAD:
+        name = g_strdup_printf("migthread%d", id);
+        break;
     case VIR_CGROUP_THREAD_LAST:
         virReportError(VIR_ERR_INTERNAL_ERROR,
                        _("unexpected name value %1$d"), nameval);
