@@ -2805,6 +2805,7 @@ qemuDomainAttachHostDevice(virQEMUDriver *driver,
             return -1;
         break;
 
+    case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_VDPA:
     case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_LAST:
     default:
         virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
@@ -4717,6 +4718,7 @@ qemuDomainRemoveHostDevice(virQEMUDriver *driver,
     case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_MDEV:
         qemuDomainRemoveMediatedDevice(driver, vm, hostdev);
         break;
+    case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_VDPA:
     case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_LAST:
         break;
     }
@@ -5743,6 +5745,7 @@ qemuDomainDetachPrepHostdev(virDomainObj *vm,
             break;
         case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_SCSI_HOST:
             break;
+        case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_VDPA:
         case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_LAST:
         default:
             virReportError(VIR_ERR_INTERNAL_ERROR,

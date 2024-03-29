@@ -2190,6 +2190,7 @@ virDomainHostdevDefValidate(const virDomainHostdevDef *hostdev)
             }
             break;
         case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_MDEV:
+        case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_VDPA:
         case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_LAST:
             break;
         }

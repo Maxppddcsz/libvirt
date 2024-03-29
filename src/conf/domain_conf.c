@@ -1052,6 +1052,7 @@ VIR_ENUM_IMPL(virDomainHostdevSubsys,
               "scsi",
               "scsi_host",
               "mdev",
+              "vdpa",
 );
 
 VIR_ENUM_IMPL(virDomainHostdevSubsysPCIBackend,
@@ -2644,6 +2645,9 @@ virDomainHostdevDefClear(virDomainHostdevDef *def)
             break;
         case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_PCI:
             g_clear_pointer(&def->source.subsys.u.pci.origstates, virBitmapFree);
+            break;
+        case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_VDPA:
+            VIR_FREE(def->source.subsys.u.vdpa.devpath);
             break;
         case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_USB:
         case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_MDEV:
@@ -6171,6 +6175,22 @@ virDomainHostdevSubsysMediatedDevDefParseXML(virDomainHostdevDef *def,
 }
 
 static int
+virDomainHostdevSubsysVDPADefParseXML(xmlNodePtr sourcenode,
+                                      virDomainHostdevDef *def)
+{
+    g_autofree char *devpath = NULL;
+    virDomainHostdevSubsysVDPA *vdpa = &def->source.subsys.u.vdpa;
+
+    if(!(devpath = virXMLPropString(sourcenode, "dev"))) {
+       virReportError(VIR_ERR_CONFIG_UNSUPPORTED, "%s",
+                      _("Missing 'dev' attribute for element <source>"));
+       return -1;
+    }
+    vdpa->devpath = g_steal_pointer(&devpath);
+    return 0;
+}
+
+static int
 virDomainHostdevDefParseXMLSubsys(xmlNodePtr node,
                                   xmlXPathContextPtr ctxt,
                                   virDomainHostdevSubsysType type,
@@ -6314,6 +6334,11 @@ virDomainHostdevDefParseXMLSubsys(xmlNodePtr node,
     case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_MDEV:
         if (virDomainHostdevSubsysMediatedDevDefParseXML(def, ctxt) < 0)
             return -1;
+        break;
+    case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_VDPA:
+        if (virDomainHostdevSubsysVDPADefParseXML(sourcenode, def) < 0) {
+            return -1;
+        }
         break;
 
     case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_LAST:
@@ -13005,6 +13030,7 @@ virDomainHostdevDefParseXML(virDomainXMLOption *xmlopt,
         case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_PCI:
         case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_SCSI_HOST:
         case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_MDEV:
+        case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_VDPA:
         case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_LAST:
             break;
         }
@@ -14152,6 +14178,9 @@ virDomainHostdevMatchSubsys(virDomainHostdevDef *a,
             return 0;
     case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_MDEV:
         return virDomainHostdevMatchSubsysMediatedDev(a, b);
+    case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_VDPA:
+        return STREQ(a->source.subsys.u.vdpa.devpath,
+                     b->source.subsys.u.vdpa.devpath);
     case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_LAST:
         return 0;
     }
@@ -23501,6 +23530,16 @@ virDomainHostdevDefFormatSubsysMdev(virBuffer *buf,
     virXMLFormatElement(buf, "source", NULL, &sourceChildBuf);
 }
 
+static void
+virDomainHostdevDefFormatSubsysVDPA(virBuffer *buf,
+                                    virDomainHostdevDef *def)
+{
+    g_auto(virBuffer) sourceAttrBuf = VIR_BUFFER_INITIALIZER;
+    virDomainHostdevSubsysVDPA *vdpasrc = &def->source.subsys.u.vdpa;
+    virBufferAsprintf(&sourceAttrBuf, " dev='%s'", vdpasrc->devpath);
+    virXMLFormatElement(buf, "source", &sourceAttrBuf, NULL);
+}
+
 
 static int
 virDomainHostdevDefFormatSubsys(virBuffer *buf,
@@ -23526,6 +23565,10 @@ virDomainHostdevDefFormatSubsys(virBuffer *buf,
 
     case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_MDEV:
         virDomainHostdevDefFormatSubsysMdev(buf, def);
+        return 0;
+
+    case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_VDPA:
+        virDomainHostdevDefFormatSubsysVDPA(buf, def);
         return 0;
 
     case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_LAST:

@@ -199,6 +199,9 @@ qemuBuildHostdevMediatedDevProps(const virDomainDef *def,
                                  virDomainHostdevDef *dev);
 
 virJSONValue *
+qemuBuildHostdevVDPADevProps(virDomainHostdevDef *dev);
+
+virJSONValue *
 qemuBuildRedirdevDevProps(const virDomainDef *def,
                           virDomainRedirdevDef *dev);
 

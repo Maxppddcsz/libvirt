@@ -351,6 +351,7 @@ virDomainHostdevDefPostParse(virDomainHostdevDef *dev,
     case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_USB:
     case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_PCI:
     case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_SCSI_HOST:
+    case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_VDPA:
     case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_LAST:
         break;
     }

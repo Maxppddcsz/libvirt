@@ -2256,6 +2256,7 @@ virSecuritySELinuxSetHostdevSubsysLabel(virSecurityManager *mgr,
         break;
     }
 
+    case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_VDPA:
     case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_LAST:
         ret = 0;
         break;
@@ -2487,6 +2488,7 @@ virSecuritySELinuxRestoreHostdevSubsysLabel(virSecurityManager *mgr,
         break;
     }
 
+    case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_VDPA:
     case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_LAST:
         ret = 0;
         break;

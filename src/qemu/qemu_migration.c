@@ -1310,6 +1310,8 @@ qemuMigrationSrcIsAllowedHostdev(const virDomainDef *def)
             case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_SCSI:
             case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_SCSI_HOST:
             case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_MDEV:
+                /* The vDPA devices don't support migration for now */
+            case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_VDPA:
                 virReportError(VIR_ERR_OPERATION_UNSUPPORTED,
                                _("cannot migrate a domain with <hostdev mode='subsystem' type='%1$s'>"),
                                virDomainHostdevSubsysTypeToString(hostdev->source.subsys.type));
