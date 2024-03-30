@@ -120,6 +120,8 @@ typedef struct _virDomainHostdevSubsys virDomainHostdevSubsys;
 
 typedef struct _virDomainHostdevSubsysMediatedDev virDomainHostdevSubsysMediatedDev;
 
+typedef struct _virDomainHostdevSubsysVDPA virDomainHostdevSubsysVDPA;
+
 typedef struct _virDomainHostdevSubsysPCI virDomainHostdevSubsysPCI;
 
 typedef struct _virDomainHostdevSubsysSCSI virDomainHostdevSubsysSCSI;

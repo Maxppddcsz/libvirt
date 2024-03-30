@@ -344,6 +344,7 @@ virDomainAuditHostdev(virDomainObj *vm, virDomainHostdevDef *hostdev,
     virDomainHostdevSubsysSCSI *scsisrc = &hostdev->source.subsys.u.scsi;
     virDomainHostdevSubsysSCSIVHost *hostsrc = &hostdev->source.subsys.u.scsi_host;
     virDomainHostdevSubsysMediatedDev *mdevsrc = &hostdev->source.subsys.u.mdev;
+    virDomainHostdevSubsysVDPA *vdpasrc = &hostdev->source.subsys.u.vdpa;
 
     virUUIDFormat(vm->def->uuid, uuidstr);
     if (!(vmname = virAuditEncode("vm", vm->def->name))) {
@@ -382,6 +383,9 @@ virDomainAuditHostdev(virDomainObj *vm, virDomainHostdevDef *hostdev,
             break;
         case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_MDEV:
             address = g_strdup(mdevsrc->uuidstr);
+            break;
+        case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_VDPA:
+            address = g_strdup(vdpasrc->devpath);
             break;
         case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_LAST:
         default:

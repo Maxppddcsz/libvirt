@@ -2496,6 +2496,8 @@ qemuValidateDomainDeviceDefHostdev(const virDomainHostdevDef *hostdev,
             break;
         case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_MDEV:
             return qemuValidateDomainMdevDef(hostdev, def, qemuCaps);
+        case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_VDPA:
+            break;
         case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_LAST:
         default:
             virReportEnumRangeError(virDomainHostdevSubsysType,

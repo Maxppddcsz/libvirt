@@ -10528,6 +10528,8 @@ qemuDomainGetHostdevPath(virDomainHostdevDef *dev,
     virDomainHostdevSubsysSCSI *scsisrc = &dev->source.subsys.u.scsi;
     virDomainHostdevSubsysSCSIVHost *hostsrc = &dev->source.subsys.u.scsi_host;
     virDomainHostdevSubsysMediatedDev *mdevsrc = &dev->source.subsys.u.mdev;
+    virDomainHostdevSubsysVDPA *vdpasrc = &dev->source.subsys.u.vdpa;
+
     g_autoptr(virUSBDevice) usb = NULL;
     g_autoptr(virSCSIDevice) scsi = NULL;
     g_autoptr(virSCSIVHostDevice) host = NULL;
@@ -10598,6 +10600,10 @@ qemuDomainGetHostdevPath(virDomainHostdevDef *dev,
             if (!(tmpPath = virMediatedDeviceGetIOMMUGroupDev(mdevsrc->uuidstr)))
                 return -1;
 
+            perm = VIR_CGROUP_DEVICE_RW;
+            break;
+        case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_VDPA:
+            tmpPath = g_strdup(vdpasrc->devpath);
             perm = VIR_CGROUP_DEVICE_RW;
             break;
         case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_LAST:
@@ -11373,6 +11379,7 @@ qemuDomainPrepareHostdev(virDomainHostdevDef *hostdev,
     case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_USB:
     case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_SCSI_HOST:
     case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_MDEV:
+    case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_VDPA:
     case VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_LAST:
         break;
     }
