@@ -385,6 +385,7 @@ VIR_ENUM_IMPL(virDomainDiskErrorPolicy,
               "report",
               "ignore",
               "enospace",
+              "retry",
 );
 
 VIR_ENUM_IMPL(virDomainDiskIo,
@@ -7798,6 +7799,9 @@ static int
 virDomainDiskDefDriverParseXML(virDomainDiskDef *def,
                                xmlNodePtr cur)
 {
+    g_autofree char *tmp = NULL;
+    bool retry_enabled = false;
+
     def->driverName = virXMLPropString(cur, "name");
 
     if (virXMLPropEnum(cur, "cache", virDomainDiskCacheTypeFromString,
@@ -7819,6 +7823,34 @@ virDomainDiskDefDriverParseXML(virDomainDiskDef *def,
                        _("Invalid disk read error policy: '%1$s'"),
                        virDomainDiskErrorPolicyTypeToString(def->rerror_policy));
         return -1;
+    }
+
+    retry_enabled = (def->error_policy == VIR_DOMAIN_DISK_ERROR_POLICY_RETRY) ||
+                    (def->rerror_policy == VIR_DOMAIN_DISK_ERROR_POLICY_RETRY);
+
+    if ((tmp = virXMLPropString(cur, "retry_interval")) &&
+        (!retry_enabled ||
+         (virStrToLong_ll(tmp, NULL, 10, &def->retry_interval) < 0) ||
+         (def->retry_interval < 0))) {
+        virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
+                       _("unknown disk retry interval '%s'"), tmp);
+        return -1;
+    }
+    if (retry_enabled && !tmp) {
+        def->retry_interval = VIR_DOMAIN_DISK_DEFAULT_RETRY_INTERVAL;
+    }
+    VIR_FREE(tmp);
+
+    if ((tmp = virXMLPropString(cur, "retry_timeout")) &&
+        (!retry_enabled ||
+         (virStrToLong_ll(tmp, NULL, 10, &def->retry_timeout) < 0) ||
+         (def->retry_timeout < 0))) {
+        virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
+                       _("unknown disk retry interval '%s'"), tmp);
+        return -1;
+    }
+    if (retry_enabled && !tmp) {
+        def->retry_timeout = VIR_DOMAIN_DISK_DEFAULT_RETRY_TIMEOUT;
     }
 
     if (virXMLPropEnum(cur, "io", virDomainDiskIoTypeFromString,
@@ -22665,6 +22697,12 @@ virDomainDiskDefFormatDriver(virBuffer *buf,
     if (disk->rerror_policy)
         virBufferAsprintf(&attrBuf, " rerror_policy='%s'",
                           virDomainDiskErrorPolicyTypeToString(disk->rerror_policy));
+
+    if (disk->retry_interval)
+        virBufferAsprintf(&attrBuf, " retry_interval='%lld'", disk->retry_interval);
+
+    if (disk->retry_timeout)
+        virBufferAsprintf(&attrBuf, " retry_timeout='%lld'", disk->retry_timeout);
 
     if (disk->iomode)
         virBufferAsprintf(&attrBuf, " io='%s'",
