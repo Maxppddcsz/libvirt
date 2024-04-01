@@ -1519,6 +1519,7 @@ qemuMonitorCPUInfoClear(qemuMonitorCPUInfo *cpus,
         cpus[i].qemu_id = -1;
         cpus[i].socket_id = -1;
         cpus[i].die_id = -1;
+        cpus[i].cluster_id = -1;
         cpus[i].core_id = -1;
         cpus[i].thread_id = -1;
         cpus[i].node_id = -1;
@@ -1676,6 +1677,7 @@ qemuMonitorGetCPUInfoHotplug(struct qemuMonitorQueryHotpluggableCpusEntry *hotpl
                                          !vcpus[mainvcpu].online;
         vcpus[mainvcpu].socket_id = hotplugvcpus[i].socket_id;
         vcpus[mainvcpu].die_id = hotplugvcpus[i].die_id;
+        vcpus[mainvcpu].cluster_id = hotplugvcpus[i].cluster_id;
         vcpus[mainvcpu].core_id = hotplugvcpus[i].core_id;
         vcpus[mainvcpu].thread_id = hotplugvcpus[i].thread_id;
         vcpus[mainvcpu].node_id = hotplugvcpus[i].node_id;
