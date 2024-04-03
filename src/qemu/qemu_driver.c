@@ -105,6 +105,7 @@
 #include "virdomaincheckpointobjlist.h"
 #include "virutil.h"
 #include "backup_conf.h"
+#include "qemu_hotpatch.h"
 
 #define VIR_FROM_THIS VIR_FROM_QEMU
 
@@ -12250,6 +12251,8 @@ qemuDomainAbortJobFlags(virDomainPtr dom,
         qemuBackupJobCancelBlockjobs(vm, priv->backup, true, VIR_ASYNC_JOB_NONE);
         ret = 0;
         break;
+    case VIR_ASYNC_JOB_HOTPATCH:
+        break;
 
     case VIR_ASYNC_JOB_LAST:
     default:
@@ -19934,6 +19937,70 @@ qemuDomainFDAssociate(virDomainPtr domain,
     return ret;
 }
 
+static char *
+qemuDomainHotpatchManage(virDomainPtr domain,
+                         int action,
+                         const char *patch,
+                         const char *id,
+                         unsigned int flags)
+{
+    virDomainObj *vm;
+    virQEMUDriver *driver = domain->conn->privateData;
+    char *ret = NULL;
+    size_t len;
+    g_autoptr(virQEMUDriverConfig) cfg = virQEMUDriverGetConfig(driver);
+
+    virCheckFlags(0, NULL);
+
+    if (!(vm = qemuDomainObjFromDomain(domain)))
+        goto cleanup;
+
+    if (virDomainObjBeginAsyncJob(vm, VIR_ASYNC_JOB_HOTPATCH,
+                                   VIR_DOMAIN_JOB_OPERATION_HOTPATCH, 0) < 0)
+        goto cleanup;
+
+    if (virDomainObjCheckActive(vm) < 0)
+        goto endjob;
+
+    qemuDomainObjSetAsyncJobMask(vm, VIR_JOB_DEFAULT_MASK);
+
+    switch (action) {
+    case VIR_DOMAIN_HOTPATCH_APPLY:
+        ret = qemuDomainHotpatchApply(vm, patch);
+        break;
+
+    case VIR_DOMAIN_HOTPATCH_UNAPPLY:
+        ret = qemuDomainHotpatchUnapply(vm, id);
+        break;
+
+    case VIR_DOMAIN_HOTPATCH_QUERY:
+        ret = qemuDomainHotpatchQuery(vm);
+        break;
+
+    case VIR_DOMAIN_HOTPATCH_AUTOLOAD:
+        ret = qemuDomainHotpatchAutoload(vm, cfg->hotpatchPath);
+        break;
+
+    default:
+        virReportError(VIR_ERR_OPERATION_INVALID, "%s",
+                       _("Unknow hotpatch action"));
+    }
+
+    if (!ret)
+        goto endjob;
+
+    /* Wipeout redundant empty line */
+    len = strlen(ret);
+    if (len > 0)
+        ret[len - 1] = '\0';
+
+ endjob:
+    virDomainObjEndAsyncJob(vm);
+
+ cleanup:
+    virDomainObjEndAPI(&vm);
+    return ret;
+}
 
 static virHypervisorDriver qemuHypervisorDriver = {
     .name = QEMU_DRIVER_NAME,
@@ -20178,6 +20245,7 @@ static virHypervisorDriver qemuHypervisorDriver = {
     .domainAgentSetResponseTimeout = qemuDomainAgentSetResponseTimeout, /* 5.10.0 */
     .domainBackupBegin = qemuDomainBackupBegin, /* 6.0.0 */
     .domainBackupGetXMLDesc = qemuDomainBackupGetXMLDesc, /* 6.0.0 */
+    .domainHotpatchManage = qemuDomainHotpatchManage, /* 6.2.0 */
     .domainAuthorizedSSHKeysGet = qemuDomainAuthorizedSSHKeysGet, /* 6.10.0 */
     .domainAuthorizedSSHKeysSet = qemuDomainAuthorizedSSHKeysSet, /* 6.10.0 */
     .domainGetMessages = qemuDomainGetMessages, /* 7.1.0 */

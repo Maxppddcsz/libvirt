@@ -4210,6 +4210,7 @@ typedef enum {
     VIR_DOMAIN_JOB_OPERATION_DUMP = 8, /* (Since: 3.3.0) */
     VIR_DOMAIN_JOB_OPERATION_BACKUP = 9, /* (Since: 6.0.0) */
     VIR_DOMAIN_JOB_OPERATION_SNAPSHOT_DELETE = 10, /* (Since: 9.0.0) */
+    VIR_DOMAIN_JOB_OPERATION_HOTPATCH = 11, /* (Since: 6.2.0) */
 
 # ifdef VIR_ENUM_SENTINELS
     VIR_DOMAIN_JOB_OPERATION_LAST /* (Since: 3.3.0) */
@@ -6425,6 +6426,30 @@ int virDomainAuthorizedSSHKeysGet(virDomainPtr domain,
                                   const char *user,
                                   char ***keys,
                                   unsigned int flags);
+
+/**
+ * virDomainHotpatchAction:
+ *
+ * Since: 6.2.0
+ */
+typedef enum {
+    VIR_DOMAIN_HOTPATCH_NONE = 0, /* No action (Since: 6.2.0) */
+    VIR_DOMAIN_HOTPATCH_APPLY,    /* Apply hotpatch (Since: 6.2.0) */
+    VIR_DOMAIN_HOTPATCH_UNAPPLY,  /* Unapply hotpatch (Since: 6.2.0) */
+    VIR_DOMAIN_HOTPATCH_QUERY,    /* Query hotpatch (Since: 6.2.0) */
+    VIR_DOMAIN_HOTPATCH_AUTOLOAD, /* Autoload hotpatch (Since: 6.2.0) */
+
+# ifdef VIR_ENUM_SENTINELS
+    VIR_DOMAIN_HOTPATCH_LAST      /* Last index (Since: 6.2.0) */
+# endif
+} virDomainHotpatchAction;
+
+char *
+virDomainHotpatchManage(virDomainPtr domain,
+                        int action,
+                        const char *patch,
+                        const char *id,
+                        unsigned int flags);
 
 /**
  * virDomainAuthorizedSSHKeysSetFlags:

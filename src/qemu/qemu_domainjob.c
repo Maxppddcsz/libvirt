@@ -56,6 +56,7 @@ qemuDomainAsyncJobPhaseToString(virDomainAsyncJob job,
     case VIR_ASYNC_JOB_START:
     case VIR_ASYNC_JOB_NONE:
     case VIR_ASYNC_JOB_BACKUP:
+    case VIR_ASYNC_JOB_HOTPATCH:
         G_GNUC_FALLTHROUGH;
     case VIR_ASYNC_JOB_LAST:
         break;
@@ -82,6 +83,7 @@ qemuDomainAsyncJobPhaseFromString(virDomainAsyncJob job,
     case VIR_ASYNC_JOB_START:
     case VIR_ASYNC_JOB_NONE:
     case VIR_ASYNC_JOB_BACKUP:
+    case VIR_ASYNC_JOB_HOTPATCH:
         G_GNUC_FALLTHROUGH;
     case VIR_ASYNC_JOB_LAST:
         break;

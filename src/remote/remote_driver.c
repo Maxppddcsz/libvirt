@@ -7842,6 +7842,7 @@ static virHypervisorDriver hypervisor_driver = {
     .domainAgentSetResponseTimeout = remoteDomainAgentSetResponseTimeout, /* 5.10.0 */
     .domainBackupBegin = remoteDomainBackupBegin, /* 6.0.0 */
     .domainBackupGetXMLDesc = remoteDomainBackupGetXMLDesc, /* 6.0.0 */
+    .domainHotpatchManage = remoteDomainHotpatchManage, /* 6.2.0 */
     .domainAuthorizedSSHKeysGet = remoteDomainAuthorizedSSHKeysGet, /* 6.10.0 */
     .domainAuthorizedSSHKeysSet = remoteDomainAuthorizedSSHKeysSet, /* 6.10.0 */
     .domainGetMessages = remoteDomainGetMessages, /* 7.1.0 */
