@@ -7330,8 +7330,11 @@ qemuProcessLaunch(virConnectPtr conn,
         goto cleanup;
 
     /* Autoload hotpatch */
-    if ((autoLoadStatus = qemuDomainHotpatchAutoload(vm, cfg->hotpatchPath)) == NULL) {
-        VIR_WARN("Failed to autoload the hotpatch for %s.", vm->def->name);
+    if (cfg->hotpatchPath != NULL) {
+        autoLoadStatus = qemuDomainHotpatchAutoload(vm, cfg->hotpatchPath);
+        if (autoLoadStatus == NULL) {
+            VIR_WARN("Failed to autoload the hotpatch for %s.", vm->def->name);
+        }
     }
     ret = 0;
 
