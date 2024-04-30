@@ -38,4 +38,13 @@ typedef enum {
 
 VIR_ENUM_DECL(virshDomainHostnameSource);
 
+typedef enum {
+    VIRSH_DOMAIN_DIRTYRATE_CALC_MODE_PAGE_SAMPLING,
+    VIRSH_DOMAIN_DIRTYRATE_CALC_MODE_DIRTY_BITMAP,
+    VIRSH_DOMAIN_DIRTYRATE_CALC_MODE_DIRTY_RING,
+    VIRSH_DOMAIN_DIRTYRATE_CALC_MODE_LAST,
+} virshDomainDirtyRateCalcMode;
+
+VIR_ENUM_DECL(virshDomainDirtyRateCalcMode);
+
 extern const vshCmdDef domManagementCmds[];

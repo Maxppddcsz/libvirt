@@ -28,9 +28,19 @@
 #include <libxml/relaxng.h>
 
 #include "virbuffer.h"
+#include "virenum.h"
 
 xmlXPathContextPtr virXMLXPathContextNew(xmlDocPtr xml)
     G_GNUC_WARN_UNUSED_RESULT;
+
+
+typedef enum {
+    VIR_XML_PROP_OPTIONAL = 0, /* Attribute may be absent */
+    VIR_XML_PROP_REQUIRED = 1 << 0, /* Attribute may not be absent */
+    VIR_XML_PROP_NONZERO = 1 << 1, /* Attribute may not be zero */
+    VIR_XML_PROP_WRAPNEGATIVE = 1 << 2, /* Wrap around negative values */
+} virXMLPropFlags;
+
 
 int              virXPathBoolean(const char *xpath,
                                  xmlXPathContextPtr ctxt);
@@ -78,6 +88,36 @@ char *     virXMLPropStringLimit(xmlNodePtr node,
                                  size_t maxlen);
 char *   virXMLNodeContentString(xmlNodePtr node);
 long     virXMLChildElementCount(xmlNodePtr node);
+
+int
+virXMLPropTristateBool(xmlNodePtr node,
+                       const char *name,
+                       virXMLPropFlags flags,
+                       virTristateBool *result)
+    ATTRIBUTE_NONNULL(0) ATTRIBUTE_NONNULL(1) ATTRIBUTE_NONNULL(3);
+
+int
+virXMLPropTristateSwitch(xmlNodePtr node,
+                         const char *name,
+                         virXMLPropFlags flags,
+                         virTristateSwitch *result)
+    ATTRIBUTE_NONNULL(0) ATTRIBUTE_NONNULL(1) ATTRIBUTE_NONNULL(3);
+
+int
+virXMLPropInt(xmlNodePtr node,
+              const char *name,
+              int base,
+              virXMLPropFlags flags,
+              int *result)
+    ATTRIBUTE_NONNULL(0) ATTRIBUTE_NONNULL(1) ATTRIBUTE_NONNULL(4);
+
+int
+virXMLPropUInt(xmlNodePtr node,
+               const char* name,
+               int base,
+               virXMLPropFlags flags,
+               unsigned int *result)
+    ATTRIBUTE_NONNULL(0) ATTRIBUTE_NONNULL(1) ATTRIBUTE_NONNULL(4);
 
 /* Internal function; prefer the macros below.  */
 xmlDocPtr      virXMLParseHelper(int domcode,

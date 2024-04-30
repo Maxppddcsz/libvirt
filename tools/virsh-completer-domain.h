@@ -62,3 +62,8 @@ virshDomainInterfaceAddrSourceCompleter(vshControl *ctl,
 char ** virshDomainHostnameSourceCompleter(vshControl *ctl,
                                            const vshCmd *cmd,
                                            unsigned int flags);
+
+char **
+virshDomainDirtyRateCalcModeCompleter(vshControl *ctl,
+                                      const vshCmd *cmd,
+                                      unsigned int flags);

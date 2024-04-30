@@ -6911,13 +6911,16 @@ qemuBuildCpuCommandLine(virCommandPtr cmd,
         for (i = 0; i < VIR_DOMAIN_KVM_LAST; i++) {
             switch ((virDomainKVM) i) {
             case VIR_DOMAIN_KVM_HIDDEN:
-                if (def->kvm_features[i] == VIR_TRISTATE_SWITCH_ON)
+                if (def->kvm_features->features[i] == VIR_TRISTATE_SWITCH_ON)
                     virBufferAddLit(&buf, ",kvm=off");
                 break;
 
             case VIR_DOMAIN_KVM_DEDICATED:
-                if (def->kvm_features[i] == VIR_TRISTATE_SWITCH_ON)
+                if (def->kvm_features->features[i] == VIR_TRISTATE_SWITCH_ON)
                     virBufferAddLit(&buf, ",kvm-hint-dedicated=on");
+                break;
+
+            case VIR_DOMAIN_KVM_DIRTY_RING:
                 break;
 
             /* coverity[dead_error_begin] */
@@ -7292,6 +7295,15 @@ qemuBuildAccelCommandLine(virCommand *cmd,
 
     case VIR_DOMAIN_VIRT_KVM:
         virBufferAddLit(&buf, "kvm");
+        /*
+         * only handle the kvm case, tcg case use the legacy style
+         * not that either kvm or tcg can be specified by libvirt
+         * so do not worry about the conflict of specifying both
+         * */
+        if (def->features[VIR_DOMAIN_FEATURE_KVM] == VIR_TRISTATE_SWITCH_ON &&
+            def->kvm_features->features[VIR_DOMAIN_KVM_DIRTY_RING] == VIR_TRISTATE_SWITCH_ON) {
+            virBufferAsprintf(&buf, ",dirty-ring-size=%d", def->kvm_features->dirty_ring_size);
+        }
         break;
 
     case VIR_DOMAIN_VIRT_KQEMU:
