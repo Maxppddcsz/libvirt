@@ -826,6 +826,7 @@ virNetClientIOEventTLS(int fd,
 static gboolean
 virNetClientTLSHandshake(virNetClientPtr client)
 {
+    g_autoptr(GSource) G_GNUC_UNUSED source = NULL;
     GIOCondition ev;
     int ret;
 
@@ -840,10 +841,10 @@ virNetClientTLSHandshake(virNetClientPtr client)
     else
         ev = G_IO_OUT;
 
-    virEventGLibAddSocketWatch(virNetSocketGetFD(client->sock),
-                               ev,
-                               client->eventCtx,
-                               virNetClientIOEventTLS, client, NULL);
+    source = virEventGLibAddSocketWatch(virNetSocketGetFD(client->sock),
+                                        ev,
+                                        client->eventCtx,
+                                        virNetClientIOEventTLS, client, NULL);
 
     return TRUE;
 }
@@ -882,6 +883,7 @@ int virNetClientSetTLSSession(virNetClientPtr client,
     int ret;
     char buf[1];
     int len;
+    g_autoptr(GSource) G_GNUC_UNUSED source = NULL;
 
 #ifndef WIN32
     sigset_t oldmask, blockedsigs;
@@ -934,10 +936,10 @@ int virNetClientSetTLSSession(virNetClientPtr client,
      * etc.  If we make the grade, it will send us a '\1' byte.
      */
 
-    virEventGLibAddSocketWatch(virNetSocketGetFD(client->sock),
-                               G_IO_IN,
-                               client->eventCtx,
-                               virNetClientIOEventTLSConfirm, client, NULL);
+    source = virEventGLibAddSocketWatch(virNetSocketGetFD(client->sock),
+                                        G_IO_IN,
+                                        client->eventCtx,
+                                        virNetClientIOEventTLSConfirm, client, NULL);
 
 #ifndef WIN32
     /* Block SIGWINCH from interrupting poll in curses programs */
@@ -1617,6 +1619,7 @@ static int virNetClientIOEventLoop(virNetClientPtr client,
 #endif /* !WIN32 */
         int timeout = -1;
         virNetMessagePtr msg = NULL;
+        g_autoptr(GSource) source = NULL;
         GIOCondition ev = 0;
         struct virNetClientIOEventData data = {
             .client = client,
@@ -1651,10 +1654,10 @@ static int virNetClientIOEventLoop(virNetClientPtr client,
         if (client->nstreams)
             ev |= G_IO_IN;
 
-        virEventGLibAddSocketWatch(virNetSocketGetFD(client->sock),
-                                   ev,
-                                   client->eventCtx,
-                                   virNetClientIOEventFD, &data, NULL);
+        source = virEventGLibAddSocketWatch(virNetSocketGetFD(client->sock),
+                                            ev,
+                                            client->eventCtx,
+                                            virNetClientIOEventFD, &data, NULL);
 
         /* Release lock while poll'ing so other threads
          * can stuff themselves on the queue */
@@ -1679,6 +1682,18 @@ static int virNetClientIOEventLoop(virNetClientPtr client,
 #endif /* !WIN32 */
 
         g_main_loop_run(client->eventLoop);
+
+        /*
+         * If virNetClientIOEventFD ran, this GSource will already be
+         * destroyed due to G_SOURCE_REMOVE. It is harmless to re-destroy
+         * it, since we still own a reference.
+         *
+         * If virNetClientIOWakeup ran, it will have interrupted the
+         * g_main_loop_run call, before virNetClientIOEventFD could
+         * run, and thus the GSource is still registered, and we need
+         * to destroy it since it is referencing stack memory for 'data'
+         */
+        g_source_destroy(source);
 
 #ifndef WIN32
         ignore_value(pthread_sigmask(SIG_SETMASK, &oldmask, NULL));
