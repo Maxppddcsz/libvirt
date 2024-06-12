@@ -7268,6 +7268,29 @@ remoteDispatchNetworkPortGetParameters(virNetServerPtr server G_GNUC_UNUSED,
     return rv;
 }
 
+static int
+remoteDispatchConnectGetTmmMemoryInfo(virNetServerPtr server G_GNUC_UNUSED,
+                                      virNetServerClientPtr client,
+                                      virNetMessagePtr msg G_GNUC_UNUSED,
+                                      virNetMessageErrorPtr rerr,
+                                      remote_connect_get_tmm_memory_info_args *args,
+                                      remote_connect_get_tmm_memory_info_ret *ret)
+{
+    int rv = -1;
+    char *meminfo = NULL;
+    virConnectPtr conn = remoteGetHypervisorConn(client);
+
+    if (conn && (meminfo = virConnectGetTmmMemoryInfo(conn, args->detail))) {
+        rv = 0;
+        ret->meminfo = meminfo;
+    }
+
+    if (rv < 0)
+        virNetMessageSaveError(rerr);
+
+    return rv;
+}
+
 
 /*----- Helpers. -----*/
 

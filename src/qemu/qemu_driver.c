@@ -23385,6 +23385,144 @@ qemuDomainStartDirtyRateCalc(virDomainPtr dom,
     return ret;
 }
 
+static int
+qemuConnectTmmInfoListAppend(char ***targetInfoStrList,
+                             char **infoStrList,
+                             int targetNumaNum,
+                             int *startIndex,
+                             int maxListSize)
+{
+    char *numStart;
+    int numaNode, index, ret = 0;
+
+    for (index = *startIndex; index < maxListSize; index++) {
+        if (strlen(infoStrList[index]) == 0)
+            break;
+
+        numStart = strstr(infoStrList[index], "node ");
+        if (!numStart)
+            return -1;
+
+        virSkipToDigit((const char **)(&numStart));
+        ret = virStrToLong_i(numStart, &numStart, 10, &numaNode);
+        if (ret < 0) {
+            virReportError(VIR_ERR_INTERNAL_ERROR, "%s",
+                           _("Failed to get current numa node"));
+            return ret;
+        }
+
+        if (numaNode == targetNumaNum) {
+            ret = virStringListAdd(targetInfoStrList, infoStrList[index]);
+            if (ret < 0) {
+                virReportError(VIR_ERR_INTERNAL_ERROR, "%s [%d]",
+                               _("Failed to get add info list member"), index);
+                return ret;
+            }
+        } else {
+            break;
+        }
+    }
+
+    *startIndex = index;
+
+    return ret;
+}
+
+static char *
+qemuConnectTmmDetailInfoFormat(char *baseMeminfo,
+                               char *slabInfo)
+{
+    int ret, i = 0, j = 0;
+    char *numStart, *numListStart, *format = NULL;
+    char **baseMeminfoSplits = virStringSplit(baseMeminfo, "\n", 0);
+    char **slabInfoSplits = virStringSplit(slabInfo, "\n", 0);
+    char **resultStrList = NULL;
+    int numaSize, numaIndex, headNumaNode;
+    ssize_t meminfoListSize = virStringListLength((const char * const *)baseMeminfoSplits);
+    ssize_t slabInfoSize = virStringListLength((const char * const *)slabInfoSplits);
+
+    numStart = strchr(baseMeminfoSplits[i], ':');
+    numListStart = strchr(baseMeminfoSplits[i], '(');
+    if (!numStart || !numListStart)
+        goto cleanup;
+
+    virSkipToDigit((const char **)(&numStart));
+    ret = virStrToLong_i(numStart, &numStart, 10, &numaSize);
+    if (ret < 0) {
+        virReportError(VIR_ERR_INTERNAL_ERROR, "%s",
+                       _("Failed to get available numa size"));
+        goto cleanup;
+    }
+
+    ret = virStringListAdd(&resultStrList, baseMeminfoSplits[i++]);
+    if (ret < 0) {
+        virReportError(VIR_ERR_INTERNAL_ERROR, "%s [%d]",
+                       _("Failed to get add base memory info list member"), (i - 1));
+        goto cleanup;
+    }
+
+    virSkipToDigit((const char **)(&numListStart));
+    for (numaIndex = 0; *numListStart && numaIndex < numaSize; numaIndex++, numListStart++) {
+        ret = virStrToLong_i(numListStart, &numListStart, 10, &headNumaNode);
+        if (ret < 0) {
+            virReportError(VIR_ERR_INTERNAL_ERROR, "%s",
+                           _("Failed to get current numa node"));
+            goto cleanup;
+        }
+
+        ret = qemuConnectTmmInfoListAppend(&resultStrList, baseMeminfoSplits, headNumaNode, &i, meminfoListSize);
+        if (ret < 0)
+            goto cleanup;
+        ret = qemuConnectTmmInfoListAppend(&resultStrList, slabInfoSplits, headNumaNode, &j, slabInfoSize);
+        if (ret < 0)
+            goto cleanup;
+    }
+
+    format = virStringListJoin((const char **)resultStrList, "\n");
+
+ cleanup:
+    virStringListFree(baseMeminfoSplits);
+    virStringListFree(slabInfoSplits);
+    virStringListFree(resultStrList);
+    return format;
+}
+
+static char *
+qemuConnectGetTmmMemoryInfo(virConnectPtr conn G_GNUC_UNUSED,
+                            bool detail)
+{
+    int maxLen = 10 * 1024;
+    char *meminfo = NULL;
+    g_autofree char *formatInfo = NULL;
+    g_autofree char *baseMeminfo = NULL;
+    g_autofree char *slabInfo = NULL;
+    g_autofree char *buddyInfo = NULL;
+
+    if (virFileReadAll("/sys/kernel/tmm/memory_info", maxLen, &baseMeminfo) < 0)
+        goto end;
+    if (detail && virFileReadAll("/sys/kernel/tmm/slab_info", maxLen, &slabInfo) < 0)
+        goto end;
+    if (detail && virFileReadAll("/sys/kernel/tmm/buddy_info", maxLen, &buddyInfo) < 0)
+        goto end;
+
+    if (detail) {
+        if (!virStringIsEmpty(baseMeminfo) && !virStringIsEmpty(slabInfo)) {
+            formatInfo = qemuConnectTmmDetailInfoFormat(baseMeminfo, slabInfo);
+            if (formatInfo == NULL)
+                goto end;
+        } else {
+            formatInfo = g_strdup_printf(_("%s%s"), baseMeminfo, slabInfo);
+        }
+
+        meminfo = g_strdup_printf(_("%s\n%s"), formatInfo, buddyInfo);
+    } else {
+        meminfo = g_steal_pointer(&baseMeminfo);
+    }
+
+end:
+    return meminfo;
+}
+
 
 static virHypervisorDriver qemuHypervisorDriver = {
     .name = QEMU_DRIVER_NAME,
@@ -23627,6 +23765,7 @@ static virHypervisorDriver qemuHypervisorDriver = {
     .domainBackupGetXMLDesc = qemuDomainBackupGetXMLDesc, /* 6.0.0 */
     .domainHotpatchManage = qemuDomainHotpatchManage, /* 6.2.0 */
     .domainStartDirtyRateCalc = qemuDomainStartDirtyRateCalc, /* 6.2.0 */
+    .connectGetTmmMemoryInfo = qemuConnectGetTmmMemoryInfo, /* 6.2.0 */
 };
 
 

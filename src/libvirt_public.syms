@@ -877,5 +877,6 @@ LIBVIRT_6.2.0 {
     global:
         virDomainHotpatchManage;
         virDomainStartDirtyRateCalc;
+        virConnectGetTmmMemoryInfo;
 } LIBVIRT_6.0.0;
 # .... define new API here using predicted next version number ....

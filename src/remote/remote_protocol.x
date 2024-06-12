@@ -3789,6 +3789,14 @@ struct remote_domain_start_dirty_rate_calc_args {
     unsigned int flags;
 };
 
+struct remote_connect_get_tmm_memory_info_args {
+    unsigned int detail;
+};
+
+struct remote_connect_get_tmm_memory_info_ret {
+    remote_nonnull_string meminfo;
+};
+
 /*----- Protocol. -----*/
 
 /* Define the program number, protocol version and procedure numbers here. */
@@ -6698,5 +6706,11 @@ enum remote_procedure {
      * @generate: both
      * @acl: domain:read
      */
-    REMOTE_PROC_DOMAIN_HOTPATCH_MANAGE = 800
+    REMOTE_PROC_DOMAIN_HOTPATCH_MANAGE = 800,
+
+    /**
+     * @generate: none
+     * @acl: connect:read
+     */
+    REMOTE_PROC_CONNECT_GET_TMM_MEMORY_INFO = 900
 };
