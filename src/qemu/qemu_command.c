@@ -7266,6 +7266,8 @@ qemuBuildMachineCommandLine(virCommandPtr cmd,
 
     if (def->sev)
         virBufferAddLit(&buf, ",memory-encryption=sev0");
+    if (def->cvm)
+        virBufferAddLit(&buf, ",kvm-type=cvm");
 
     if (virQEMUCapsGet(qemuCaps, QEMU_CAPS_BLOCKDEV)) {
         if (priv->pflash0)

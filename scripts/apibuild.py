@@ -107,6 +107,7 @@ ignored_functions = {
     "virDomainMigrateConfirm3Params": "private function for migration",
     "virDomainMigratePrepareTunnel3Params": "private function for tunnelled migration",
     "virErrorCopyNew": "private",
+    "virConnectGetTmmMemoryInfo": "private function for tmm",
 }
 
 ignored_macros = {

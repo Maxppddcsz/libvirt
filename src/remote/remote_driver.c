@@ -8253,6 +8253,34 @@ remoteDomainGetGuestInfo(virDomainPtr dom,
     return rv;
 }
 
+static char *
+remoteConnectGetTmmMemoryInfo(virConnectPtr conn,
+                              bool detail)
+{
+    char *rv = NULL;
+    struct private_data *priv = conn->privateData;
+    remote_connect_get_tmm_memory_info_args args;
+    remote_connect_get_tmm_memory_info_ret ret;
+
+    remoteDriverLock(priv);
+
+    args.detail = detail;
+
+    memset(&ret, 0, sizeof(ret));
+
+    if (call(conn, priv, 0, REMOTE_PROC_CONNECT_GET_TMM_MEMORY_INFO,
+             (xdrproc_t)xdr_remote_connect_get_tmm_memory_info_args, (char *)&args,
+             (xdrproc_t)xdr_remote_connect_get_tmm_memory_info_ret, (char *)&ret) < 0) {
+        goto done;
+    }
+
+    rv = ret.meminfo;
+
+ done:
+    remoteDriverUnlock(priv);
+    return rv;
+}
+
 /* get_nonnull_domain and get_nonnull_network turn an on-wire
  * (name, uuid) pair into virDomainPtr or virNetworkPtr object.
  * These can return NULL if underlying memory allocations fail,
@@ -8686,6 +8714,7 @@ static virHypervisorDriver hypervisor_driver = {
     .domainBackupGetXMLDesc = remoteDomainBackupGetXMLDesc, /* 6.0.0 */
     .domainHotpatchManage = remoteDomainHotpatchManage, /* 6.2.0 */
     .domainStartDirtyRateCalc = remoteDomainStartDirtyRateCalc, /* 6.2.0 */
+    .connectGetTmmMemoryInfo = remoteConnectGetTmmMemoryInfo /* 6.2.0 */
 };
 
 static virNetworkDriver network_driver = {

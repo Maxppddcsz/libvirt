@@ -1273,6 +1273,7 @@ VIR_ENUM_IMPL(virDomainLaunchSecurity,
               VIR_DOMAIN_LAUNCH_SECURITY_LAST,
               "",
               "sev",
+              "cvm",
 );
 
 static virClassPtr virDomainObjClass;
@@ -16823,6 +16824,7 @@ virDomainSEVDefParseXML(xmlNodePtr sevNode,
     def->sectype = virDomainLaunchSecurityTypeFromString(type);
     switch ((virDomainLaunchSecurity) def->sectype) {
     case VIR_DOMAIN_LAUNCH_SECURITY_SEV:
+    case VIR_DOMAIN_LAUNCH_SECURITY_CVM:
         break;
     case VIR_DOMAIN_LAUNCH_SECURITY_NONE:
     case VIR_DOMAIN_LAUNCH_SECURITY_LAST:
@@ -22169,11 +22171,19 @@ virDomainDefParseXML(xmlDocPtr xml,
     ctxt->node = node;
     VIR_FREE(nodes);
 
-    /* Check for SEV feature */
+    /* Check for CVM/SEV feature */
     if ((node = virXPathNode("./launchSecurity", ctxt)) != NULL) {
-        def->sev = virDomainSEVDefParseXML(node, ctxt);
-        if (!def->sev)
-            goto error;
+        tmp = virXMLPropString(node, "type");
+        if((virDomainLaunchSecurity)virDomainLaunchSecurityTypeFromString(tmp) == VIR_DOMAIN_LAUNCH_SECURITY_CVM) {
+            def->cvm = true;
+        } else {
+            def->sev = virDomainSEVDefParseXML(node, ctxt);
+            if(!def->sev) {
+                VIR_FREE(tmp);
+                goto error;
+            }
+        }
+        VIR_FREE(tmp);
     }
 
     /* analysis of memory devices */
@@ -29861,7 +29871,12 @@ virDomainDefFormatInternalSetRootName(virDomainDefPtr def,
     if (def->keywrap)
         virDomainKeyWrapDefFormat(buf, def->keywrap);
 
-    virDomainSEVDefFormat(buf, def->sev);
+    if (def->cvm) {
+        virBufferAddLit(buf, "<launchSecurity type='cvm'>\n");
+        virBufferAddLit(buf, "</launchSecurity>\n");
+    } else {
+        virDomainSEVDefFormat(buf, def->sev);
+    }
 
     virBufferAdjustIndent(buf, -2);
     virBufferAsprintf(buf, "</%s>\n", rootname);
