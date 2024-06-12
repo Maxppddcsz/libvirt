@@ -2373,6 +2373,7 @@ struct _virDomainKeyWrapDef {
 typedef enum {
     VIR_DOMAIN_LAUNCH_SECURITY_NONE,
     VIR_DOMAIN_LAUNCH_SECURITY_SEV,
+    VIR_DOMAIN_LAUNCH_SECURITY_CVM,
 
     VIR_DOMAIN_LAUNCH_SECURITY_LAST,
 } virDomainLaunchSecurity;
@@ -2586,6 +2587,8 @@ struct _virDomainDef {
 
     /* SEV-specific domain */
     virDomainSEVDefPtr sev;
+    /* CVM-specific domain */
+    bool cvm;
 
     /* Application-specific custom metadata */
     xmlNodePtr metadata;

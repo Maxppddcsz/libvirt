@@ -460,35 +460,44 @@
 
   <define name="launchSecurity">
     <element name="launchSecurity">
-      <attribute name="type">
-        <value>sev</value>
-      </attribute>
-      <interleave>
-        <element name="cbitpos">
-          <data type='unsignedInt'/>
-        </element>
-        <element name="reducedPhysBits">
-          <data type='unsignedInt'/>
-        </element>
-        <element name="policy">
-          <ref name='hexuint'/>
-        </element>
-        <optional>
-          <element name="handle">
-            <ref name='unsignedInt'/>
-          </element>
-        </optional>
-        <optional>
-          <element name="dhCert">
-            <data type="string"/>
-          </element>
-        </optional>
-        <optional>
-          <element name="session">
-            <data type="string"/>
-          </element>
-        </optional>
-      </interleave>
+      <choice>
+        <group>
+          <attribute name="type">
+              <value>sev</value>
+          </attribute>
+          <interleave>
+            <element name="cbitpos">
+              <data type='unsignedInt'/>
+            </element>
+            <element name="reducedPhysBits">
+              <data type='unsignedInt'/>
+            </element>
+            <element name="policy">
+              <ref name='hexuint'/>
+            </element>
+            <optional>
+              <element name="handle">
+                <ref name='unsignedInt'/>
+              </element>
+            </optional>
+            <optional>
+              <element name="dhCert">
+                <data type="string"/>
+              </element>
+            </optional>
+            <optional>
+              <element name="session">
+                <data type="string"/>
+              </element>
+            </optional>
+          </interleave>
+        </group>
+        <group>
+          <attribute name="type">
+              <value>cvm</value>
+          </attribute>
+        </group>
+      </choice>
     </element>
   </define>
 
