@@ -77,6 +77,7 @@ cpumap_DATA = \
 	cpu_map/arm_Kunpeng-920.xml \
 	cpu_map/arm_FT-2000plus.xml \
 	cpu_map/arm_Tengyun-S2500.xml \
+	cpu_map/arm_Tengyun-S5000C.xml \
 	$(NULL)
 
 EXTRA_DIST += $(cpumap_DATA)
